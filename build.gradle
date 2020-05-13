@@ -1,6 +1,7 @@
 plugins {
     id "java"
     id "application"
+    id 'com.github.ben-manes.versions' version '0.28.0'
 }
 
 // Java versions for compilation and output
@@ -46,19 +47,22 @@ repositories {
     }
 }
 
+def jacksonVersion = "2.11.0"
+def jupiterVersion = "5.7.0-M1"
+
 dependencies {
-    implementation "org.sbml.jsbml:jsbml:1.4"
+    implementation "org.sbml.jsbml:jsbml:1.5"
     implementation "de.zbit:SysBio:1390"
-    implementation "org.postgresql:postgresql:42.2.2"
-    implementation "org.biojava:biojava-ontology:5.0.0"
-    implementation 'us.hebi.matlab.mat:mfl-core:0.5.3'
-    implementation "com.fasterxml.jackson.core:jackson-core:2.10.1"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.10.1"
+    implementation "org.postgresql:postgresql:42.2.12"
+    implementation "org.biojava:biojava-ontology:5.3.0"
+    implementation 'us.hebi.matlab.mat:mfl-core:0.5.6'
+    implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation "net.sf.jtidy:jtidy:r938"
     implementation "de.uni-rostock.sbi:CombineArchive:1.4.0"
-    implementation "com.zaxxer:HikariCP:3.4.2"
-    testImplementation "org.junit.jupiter:junit-jupiter-api:5.5.2"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.5.2"
+    implementation "com.zaxxer:HikariCP:3.4.5"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
 }
 
 test {
