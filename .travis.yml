@@ -8,28 +8,32 @@ jdk:
 services:
 - docker
 notifications:
-  slack:
-    secure: CfOon5xVIVFiUQYeE9kC7GUOwPr+igeWSemL0NcpcEmzxC/4CkFC5ediR3znosufNxsexSXuC3mzy+UTzIstpcsxVWXdYwvlsrZjw0KVYEKpMcWl6MiWj0UUrggZDoV2xjKvcd4gxDgG/criOfJGxJEEjjWw0r+ZNRSDUHdNR7u13v0M4Sw6UOgdkyWP9mumiPWeH4ShF6Q5aRdLnPzeHLZQ/pKg4RgvlW08Km1Hb7W+UW/mXSSrvfeZUP8L4UF4znI+iekvI/1fslt5uc9lLaFlMqreZj6IzFrJLYG9EF29HcO7g/g7SkyldYLAlma36DxwdzfxSLgdqI0V3uTFlxic9QoElLAWlGZ6Q7lw8rxy61yMWdFoGEbrg3VPWqd72v7BQ4SyOuXMNSgoPKQvnkuAHAf4MDlb5wZutXKoO069ruMQ7zDrOcPe3fhreJM7Jz9VupvmWiwpE0q5067FtEeUYTo0LdifjjLAnar9NypvAnQhMJv9KxvWq3+Qs0lSf5NY3+dpoIJsUN5zIrAqj01mDER8J6MIMMU0zR+68sqD1T9wQgYexNqczLmbrPQNCwF/nz/vulIBiow2AM+mXG5XIHwcySbW9X2xSyXGxBeWTb3vvfczrnnmGY931i52ElIz2GN9xrg5sfSz91AAZRHeiUtmdIqXE4hZlkREqa4=
   email: false
-
+  slack:
+    secure: UVpVWlZ2MmsntVl5H9IlSOTz27eF48SJUZLHsi/VYeQOLCX/kWpwP/f0/EjrWqOhhkMjGvLMMvAfQZ4QTJtxtw52+Bb1DalMTslPkyRKq6yobRcFuZifD+mCmplhiNQUxiefCjaLcBiCzSmwBhFw+6eVmh5AX01DBTQt8XBn6SxQ8eGutpn/721ZC4d2TP483gj2yTOzdP/s0unRw47sFyAwcfmJilraUxrXVIdvM3YBzAnUa2+77EUNJ6LBeWsy2fRpgFwYbRdsbU5lZJKskasdG2+z9gOGEe/RDirpEGSBnteHiye6++CCD+CGS7szfycjCUsLkq54e2g/HgO32sbpSD74YWOWyQf2VimxRDitSkuv2dleIzGrhe636UqzjTLd/eWkJP5keao6nGKypOnUGD14wI9a8kqp0/e5q5ts+OXzvESGvAiug9WTYNqlpVdZWmYYNUzhqbqHNHpS/cR+nD6Z1ZWRy/m12m5VTR2zHmke8VQZUcKBjIS6LztYqknhWz3BYO0BOsMPo0BYSGrta7fKBAFNf/RlFk/5vAfdHLkL0ZzJgypNl1+twmNHTvM/z2xj247wI5aISB3lt++wmjCHLiAr4NzOxOxyLyT1l+ev6mDBvQtip37CgVthys08QaAnWwnZPe/xGeareoq8b4VF6iT/JlAnDcZCagM=
 before_install:
 - git clone https://github.com/SBRG/bigg_models_data
 install:
-# use current build artifact instead of published version
-- printf "FROM openjdk:11-slim\n\nCOPY ModelPolisher-2.1-beta.jar /\nCMD \"/bin/sh\"" > docker/java_docker/Dockerfile
+- printf "FROM openjdk:11-slim\n\nCOPY ModelPolisher-2.1-beta.jar /\nCMD \"/bin/sh\""
+  > docker/java_docker/Dockerfile
 - gradle devel
 - docker-compose up -d
 - docker ps -a
 before_script:
-# wait for both databases to accept connections
 - echo "Waiting for databases"
 - while ! pg_isready -h 0.0.0.0 -p 1310 > /dev/null; do sleep 1; done
 - while ! pg_isready -h 0.0.0.0 -p 1013 > /dev/null; do sleep 1; done
 - echo "Databases are up"
 script:
-- travis_wait docker-compose run -v $MODELS:/models polisher sh -c "java -jar /ModelPolisher-2.1-beta.jar --input=/models/ecoli_core_model.xml --output=/models/out/ecoli_core_model.xml --annotate-with-bigg=true --add-adb-annotations=true --output-combine=true && ls -lish models/out"
-- travis_wait docker-compose run -v $MODELS:/models polisher sh -c "java -jar /ModelPolisher-2.1-beta.jar --input=/models/yeast_7.00.xml --output=/models/out/yeast_7.00.xml --annotate-with-bigg=true --add-adb-annotations=true --output-combine=true && ls -lish models/out"
-- travis_wait docker-compose run -v $MODELS:/models polisher sh -c "java -jar /ModelPolisher-2.1-beta.jar --input=/models/RECON1.xml --output=/models/out/RECON1.xml --annotate-with-bigg=true --add-adb-annotations=true --output-combine=true && ls -lish models/out"
+- travis_wait docker-compose run -v $MODELS:/models polisher sh -c "java -jar /ModelPolisher-2.1-beta.jar
+  --input=/models/ecoli_core_model.xml --output=/models/out/ecoli_core_model.xml --annotate-with-bigg=true
+  --add-adb-annotations=true --output-combine=true && ls -lish models/out"
+- travis_wait docker-compose run -v $MODELS:/models polisher sh -c "java -jar /ModelPolisher-2.1-beta.jar
+  --input=/models/yeast_7.00.xml --output=/models/out/yeast_7.00.xml --annotate-with-bigg=true
+  --add-adb-annotations=true --output-combine=true && ls -lish models/out"
+- travis_wait docker-compose run -v $MODELS:/models polisher sh -c "java -jar /ModelPolisher-2.1-beta.jar
+  --input=/models/RECON1.xml --output=/models/out/RECON1.xml --annotate-with-bigg=true
+  --add-adb-annotations=true --output-combine=true && ls -lish models/out"
 after_script:
 - docker-compose down
 git:
