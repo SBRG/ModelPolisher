@@ -13,7 +13,7 @@ java {
 defaultTasks "clean", "fatJar"
 archivesBaseName = "ModelPolisher"
 mainClassName = "ModelPolisher"
-version = "2.1-beta"
+version = "2.1"
 
 sourceSets {
     main {
@@ -169,7 +169,7 @@ if (project.file( "src/scripts/ModelPolisher.sh").exists()) {
 def replaceVersion(path) {
     ArrayList<String> content = new ArrayList<>()
     File travisFile = new File(path)
-    String MPVersion = /ModelPolisher-(.*?)\d{1,2}(.\d{1,2}){1,2}.jar/
+    String MPVersion = /ModelPolisher-(.*?)\d{1,2}(.\d{1,2}){1,2}(-beta)?.jar/
     travisFile.eachLine {
         line ->
             content.add(line.replaceAll(MPVersion, "ModelPolisher-" + "${version}.jar"))

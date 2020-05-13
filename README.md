@@ -51,7 +51,7 @@ We recommend users to run ModelPolisher [using `docker`](#using-docker), though 
 
 NOTE: ModelPolisher provides various command line options which can be seen using:
 ```
-java -jar <path>/ModelPolisher/target/ModelPolisher-2.1-beta.jar -? 
+java -jar <path>/ModelPolisher/target/ModelPolisher-2.1.jar -? 
 ```
 
 In the example commands below few options are taken by default. See list of mostly used options [here](https://github.com/draeger-lab/ModelPolisher/wiki/Mostly-Used-Command-Line-Options).
@@ -77,7 +77,7 @@ NOTE: Once database backend is set-up by `docker-compose`, the databases are als
 
 On running these commands, databases will be restored in respective containers. After databases are successfully set up, use the following command (in `ModelPolisher/` directory) to run ModelPolisher:
 ```
-docker-compose run -v <path_directory_having_models>:/models/ polisher java -jar /ModelPolisher-2.1-beta.jar --input=/models/<model_name> --output=/models/output/<output_name> --annotate-with-bigg=true --add-adb-annotations=true --output-combine=true 
+docker-compose run -v <path_directory_having_models>:/models/ polisher java -jar /ModelPolisher-2.1.jar --input=/models/<model_name> --output=/models/output/<output_name> --annotate-with-bigg=true --add-adb-annotations=true --output-combine=true 
 ```
 
 Note: You must pass *absolute path for host directory*. This command will mount volume `<path_directory_having_models>` to `/models/` in container. Thus, outputs will be produced in directory `<path_directory_having_models>/output`.
@@ -110,7 +110,7 @@ User needs to host the [BiGG](https://github.com/SBRG/bigg_models) Database & [A
 
 Now, you can run the following command in general:
 ```
-java -jar "<path>/ModelPolisher/target/ModelPolisher-2.1-beta.jar" \
+java -jar "<path>/ModelPolisher/target/ModelPolisher-2.1.jar" \
   --input=<input> \
   --output=<output> \
   --output-combine=true \
@@ -134,7 +134,7 @@ We recommend the following practice for developers:
 2. After making required changes in codebase build `jar` by `gradle lightJar`.
 3. Run the newly build jar using:
 ```
-java -jar ./target/ModelPolisher-2.1-beta.jar --input=<input> --output=<output> --output-combine=true --annotate-with-bigg=true --bigg-host=0.0.0.0 --bigg-port=1310 --add-adb-annotations=true --adb-host=0.0.0.0 --adb-port=1013
+java -jar ./target/ModelPolisher-2.1.jar --input=<input> --output=<output> --output-combine=true --annotate-with-bigg=true --bigg-host=0.0.0.0 --bigg-port=1310 --add-adb-annotations=true --adb-host=0.0.0.0 --adb-port=1013
 ```
 Note: All above commands must be run in `<path>/ModelPolisher/` directory and you must have installed Java `version >= 8` and Gradle `version >= 5.0`.
 # <a name="licenses"></a>Licenses

@@ -33,7 +33,7 @@ public final class BiGGDBContract {
 
     public static class Column {
 
-      static final String ACCESSION_VALUE = "accesion_value";
+      static final String ACCESSION_VALUE = "accession_value";
       static final String BIGG_ID = "bigg_id";
       static final String CHARGE = "charge";
       static final String COMPARTMENTALIZED_COMPONENT_ID = "compartmentalized_component_id";
