@@ -1,13 +1,17 @@
 package edu.ucsd.sbrg.db;
 
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.ADB_COLLECTION;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.COLUMN_NAMESPACE;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.COLUMN_SOURCE_NAMESPACE;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.COLUMN_SOURCE_TERM;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.COLUMN_TARGET_NAMESPACE;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.COLUMN_TARGET_TERM;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.COLUMN_URLPATTERN;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.MAPPING_VIEW;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_METABOLITE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.METABOLITE_PREFIX;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.REACTION_PREFIX;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.NAMESPACE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.SOURCE_NAMESPACE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.SOURCE_TERM;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.TARGET_NAMESPACE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.TARGET_TERM;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.URLPATTERN;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Table.ADB_COLLECTION;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Table.MAPPING_VIEW;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,16 +29,6 @@ import de.zbit.util.Utils;
 public class AnnotateDB {
 
   private static final Logger logger = Logger.getLogger(AnnotateDB.class.getName());
-  private static final String SELECT = "SELECT ";
-  private static final String FROM = " FROM ";
-  private static final String WHERE = " WHERE ";
-  // source_namespace types:
-  public static final String BIGG_METABOLITE = "bigg.metabolite";
-  public static final String BIGG_REACTION = "bigg.reaction";
-  // prefixes
-  static final String METABOLITE_PREFIX = "M_";
-  static final String REACTION_PREFIX = "R_";
-  static final String GENE_PREFIX = "G_";
   private static PostgreSQLConnector connector;
 
   /**
@@ -65,6 +59,7 @@ public class AnnotateDB {
     connector.close();
   }
 
+
   /**
    * @return
    */
@@ -91,9 +86,9 @@ public class AnnotateDB {
     if (biggId.endsWith("_")) {
       biggId = biggId.substring(0, biggId.length() - 2);
     }
-    String query = SELECT + "m." + COLUMN_TARGET_TERM + ", ac." + COLUMN_URLPATTERN + FROM + MAPPING_VIEW + " m, "
-      + ADB_COLLECTION + " ac" + WHERE + "m." + COLUMN_SOURCE_NAMESPACE + " = ? AND " + "m." + COLUMN_SOURCE_TERM
-      + " = ? AND ac." + COLUMN_NAMESPACE + " = m." + COLUMN_TARGET_NAMESPACE;
+    String query = "SELECT m." + TARGET_TERM + ", ac." + URLPATTERN + " FROM " + MAPPING_VIEW + " m, " + ADB_COLLECTION
+      + " ac WHERE m." + SOURCE_NAMESPACE + " = ? AND m." + SOURCE_TERM + " = ? AND ac." + NAMESPACE + " = m."
+      + TARGET_NAMESPACE;
     try {
       Connection connection = connector.getConnection();
       PreparedStatement pStatement = connection.prepareStatement(query);
@@ -101,8 +96,8 @@ public class AnnotateDB {
       pStatement.setString(2, biggId);
       ResultSet resultSet = pStatement.executeQuery();
       while (resultSet.next()) {
-        String uri = resultSet.getString(COLUMN_URLPATTERN);
-        String id = resultSet.getString(COLUMN_TARGET_TERM);
+        String uri = resultSet.getString(URLPATTERN);
+        String id = resultSet.getString(TARGET_TERM);
         uri = uri.replace("{$id}", id);
         annotations.add(uri);
       }

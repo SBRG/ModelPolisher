@@ -15,44 +15,48 @@
 package edu.ucsd.sbrg.db;
 
 import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_BIGG_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_CHARGE;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_COMPARTMENTALIZED_COMPONENT_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_COMPARTMENT_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_COMPONENT_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_DATA_SOURCE_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_FORMULA;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_GENE_REACTION_RULE;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_GENOME_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_LOCUS_TAG;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_MODEL_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_OME_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_ORGANISM;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_PUBLICATION_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_REACTION_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_REFERENCE_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_REFERENCE_TYPE;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_SYNONYM;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COLUMN_TAXON_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COMPARTMENT;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COMPARTMENTALIZED_COMPONENT;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.COMPONENT;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.DATA_SOURCE;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.GENE;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.GENOME;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.GENOME_REGION;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.MCC;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.MODEL;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.MODEL_REACTION;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.OLD_BIGG_ID;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.PUBLICATION;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.PUBLICATION_MODEL;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.REACTION;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.REFSEQ_NAME;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.REFSEQ_PATTERN;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.SYNONYM;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.URL_PREFIX;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.BIGG_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.CHARGE;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.COMPARTMENTALIZED_COMPONENT_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.COMPARTMENT_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.COMPONENT_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.DATA_SOURCE_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.FORMULA;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.GENE_REACTION_RULE;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.GENOME_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.LOCUS_TAG;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.MODEL_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.OME_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ORGANISM;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.PUBLICATION_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.REACTION_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.REFERENCE_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.REFERENCE_TYPE;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.SUBSYSTEM;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.SYNONYM_COL;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.TAXON_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPARTMENT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPARTMENTALIZED_COMPONENT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPONENT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.DATA_SOURCE;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.GENE;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.GENOME;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.GENOME_REGION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.MCC;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.MODEL;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.MODEL_REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.OLD_BIGG_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.PUBLICATION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.PUBLICATION_MODEL;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.REFSEQ_NAME;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.REFSEQ_PATTERN;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.SYNONYM;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.URL_PREFIX;
 import static java.text.MessageFormat.format;
 import static org.sbml.jsbml.util.Pair.pairOf;
 
@@ -83,12 +87,6 @@ import edu.ucsd.sbrg.miriam.Registry;
  */
 public class BiGGDB {
 
-  private static final String SELECT = "SELECT ";
-  private static final String FROM = " FROM ";
-  private static final String WHERE = " WHERE ";
-  public static final String TYPE_SPECIES = "SPECIES";
-  public static final String TYPE_REACTION = "REACTION";
-  public static final String TYPE_GENE_PRODUCT = "GENE_PRODUCT";
   /**
    * A {@link Logger} for this class.
    */
@@ -153,8 +151,9 @@ public class BiGGDB {
    * @return
    */
   public static List<String> getSubsystems(String modelBiGGid, String reactionBiGGid) {
-    String query = "SELECT DISTINCT mr.subsystem FROM reaction r, model m, model_reaction mr WHERE m.bigg_id = ? "
-      + "AND r.bigg_id = ? AND m.id = mr.model_id AND r.id = mr.reaction_id AND LENGTH(mr.subsystem) > 0";
+    String query = "SELECT DISTINCT mr." + SUBSYSTEM + " FROM " + REACTION + " r, " + MODEL + " m, " + MODEL_REACTION
+      + " mr WHERE m." + BIGG_ID + " = ? AND r." + BIGG_ID + " = ? AND m." + ID + " = mr." + MODEL_ID
+      + " AND r.id = mr.reaction_id AND LENGTH(mr.subsystem) > 0";
     List<String> list = new LinkedList<>();
     try {
       Connection connection = connector.getConnection();
@@ -207,11 +206,10 @@ public class BiGGDB {
    * @return
    */
   public static Optional<String> getChemicalFormulaByCompartment(String componentId, String compartmentId) {
-    String query = "SELECT DISTINCT mcc." + COLUMN_FORMULA + " FROM " + MCC + " mcc, " + COMPARTMENTALIZED_COMPONENT
-      + " cc, " + COMPONENT + " c, " + COMPARTMENT + " co WHERE c." + COLUMN_BIGG_ID + " = ? AND c." + COLUMN_ID
-      + " = cc." + COLUMN_COMPONENT_ID + " AND co." + COLUMN_BIGG_ID + " = ? AND co." + COLUMN_ID + " = cc."
-      + COLUMN_COMPARTMENT_ID + " and cc." + COLUMN_ID + " = mcc." + COLUMN_COMPARTMENTALIZED_COMPONENT_ID
-      + " AND mcc.formula <> '' ORDER BY mcc." + COLUMN_FORMULA;
+    String query = "SELECT DISTINCT mcc." + FORMULA + " FROM " + MCC + " mcc, " + COMPARTMENTALIZED_COMPONENT + " cc, "
+      + COMPONENT + " c, " + COMPARTMENT + " co WHERE c." + BIGG_ID + " = ? AND c." + ID + " = cc." + COMPONENT_ID
+      + " AND co." + BIGG_ID + " = ? AND co." + ID + " = cc." + COMPARTMENT_ID + " and cc." + ID + " = mcc."
+      + COMPARTMENTALIZED_COMPONENT_ID + " AND mcc.formula <> '' ORDER BY mcc." + FORMULA;
     Set<String> results = runFormulaQuery(query, componentId, compartmentId);
     if (results.size() == 1) {
       return Optional.of(results.iterator().next());
@@ -259,11 +257,10 @@ public class BiGGDB {
    * @return
    */
   public static Optional<String> getChemicalFormula(String componentId, String modelId) {
-    String query = "SELECT DISTINCT mcc." + COLUMN_FORMULA + "\n FROM " + COMPONENT + " c,\n"
-      + COMPARTMENTALIZED_COMPONENT + " cc,\n" + MODEL + " m,\n" + MCC + " mcc\n WHERE c." + COLUMN_ID + " = cc."
-      + COLUMN_COMPONENT_ID + " AND\n cc." + COLUMN_ID + " = mcc." + COLUMN_COMPARTMENTALIZED_COMPONENT_ID + " AND\n c."
-      + COLUMN_BIGG_ID + " = ? AND\n m." + COLUMN_BIGG_ID + " = ? AND\n m." + COLUMN_ID + " = mcc." + COLUMN_MODEL_ID
-      + " AND mcc.formula <> ''";
+    String query = "SELECT DISTINCT mcc." + FORMULA + "\n FROM " + COMPONENT + " c,\n" + COMPARTMENTALIZED_COMPONENT
+      + " cc,\n" + MODEL + " m,\n" + MCC + " mcc\n WHERE c." + ID + " = cc." + COMPONENT_ID + " AND\n cc." + ID
+      + " = mcc." + COMPARTMENTALIZED_COMPONENT_ID + " AND\n c." + BIGG_ID + " = ? AND\n m." + BIGG_ID + " = ? AND\n m."
+      + ID + " = mcc." + MODEL_ID + " AND mcc.formula <> ''";
     Set<String> results = runFormulaQuery(query, componentId, modelId);
     if (results.size() == 1) {
       return Optional.of(results.iterator().next());
@@ -348,10 +345,10 @@ public class BiGGDB {
    */
   public static TreeSet<String> getGeneIds(String label) {
     TreeSet<String> results = new TreeSet<>();
-    String query = SELECT + URL_PREFIX + ", s." + SYNONYM + "\n" + "FROM  " + DATA_SOURCE + " d, " + SYNONYM + " s, "
-      + GENOME_REGION + " gr\n" + "WHERE d." + COLUMN_ID + " = s." + COLUMN_DATA_SOURCE_ID + " AND\n s." + COLUMN_OME_ID
-      + " = gr." + COLUMN_ID + " AND\n gr." + COLUMN_BIGG_ID + " = ? AND\n d." + COLUMN_BIGG_ID + " != " + OLD_BIGG_ID
-      + " AND\n d." + COLUMN_BIGG_ID + " NOT LIKE " + REFSEQ_PATTERN;
+    String query = "SELECT " + URL_PREFIX + ", s." + SYNONYM + "\n" + "FROM  " + DATA_SOURCE + " d, " + SYNONYM + " s, "
+      + GENOME_REGION + " gr\n" + "WHERE d." + ID + " = s." + DATA_SOURCE_ID + " AND\n s." + OME_ID + " = gr." + ID
+      + " AND\n gr." + BIGG_ID + " = ? AND\n d." + BIGG_ID + " != " + OLD_BIGG_ID + " AND\n d." + BIGG_ID + " NOT LIKE "
+      + REFSEQ_PATTERN;
     try {
       Connection connection = connector.getConnection();
       PreparedStatement pStatement = connection.prepareStatement(query);
@@ -387,9 +384,8 @@ public class BiGGDB {
    */
   public static Optional<String> getGeneName(String label) {
     String query = "SELECT s." + SYNONYM + "\n" + "FROM  " + DATA_SOURCE + " d, " + SYNONYM + " s, " + GENOME_REGION
-      + " gr\n" + "WHERE d." + COLUMN_ID + " = s." + COLUMN_DATA_SOURCE_ID + " AND\n s." + COLUMN_OME_ID + " = gr."
-      + COLUMN_ID + " AND\n gr." + COLUMN_BIGG_ID + " = ? AND\n d." + COLUMN_BIGG_ID + " LIKE " + REFSEQ_NAME
-      + " AND s.synonym <> ''";
+      + " gr\n" + "WHERE d." + ID + " = s." + DATA_SOURCE_ID + " AND\n s." + OME_ID + " = gr." + ID + " AND\n gr."
+      + BIGG_ID + " = ? AND\n d." + BIGG_ID + " LIKE " + REFSEQ_NAME + " AND s.synonym <> ''";
     return singleParamStatement(query, label);
   }
 
@@ -400,13 +396,12 @@ public class BiGGDB {
    * @return
    */
   public static List<String> getGeneReactionRule(String reactionId, String modelId) {
-    return getReactionRules("SELECT REPLACE(REPLACE(RTRIM(REPLACE(REPLACE(mr." + COLUMN_GENE_REACTION_RULE
-      + ", 'or', '||'), 'and', '&&'), '.'), '.', '__SBML_DOT__'), '_AT', '__SBML_DOT__') AS "
-      + COLUMN_GENE_REACTION_RULE + " FROM " + MODEL_REACTION + " mr, " + REACTION + " r, " + MODEL + " m WHERE r."
-      + COLUMN_ID + " = mr." + COLUMN_REACTION_ID + " AND m." + COLUMN_ID + " = mr." + COLUMN_MODEL_ID + " AND mr."
-      + COLUMN_GENE_REACTION_RULE + " IS NOT NULL AND  LENGTH(mr." + COLUMN_GENE_REACTION_RULE + ") > 0 AND r."
-      + COLUMN_BIGG_ID + " = ? AND m." + COLUMN_BIGG_ID + " = ? AND mr.gene_reaction_rule <> '' ORDER BY mr."
-      + COLUMN_ID, reactionId, modelId);
+    return getReactionRules("SELECT REPLACE(REPLACE(RTRIM(REPLACE(REPLACE(mr." + GENE_REACTION_RULE
+      + ", 'or', '||'), 'and', '&&'), '.'), '.', '__SBML_DOT__'), '_AT', '__SBML_DOT__') AS " + GENE_REACTION_RULE
+      + " FROM " + MODEL_REACTION + " mr, " + REACTION + " r, " + MODEL + " m WHERE r." + ID + " = mr." + REACTION_ID
+      + " AND m." + ID + " = mr." + MODEL_ID + " AND mr." + GENE_REACTION_RULE + " IS NOT NULL AND  LENGTH(mr."
+      + GENE_REACTION_RULE + ") > 0 AND r." + BIGG_ID + " = ? AND m." + BIGG_ID
+      + " = ? AND mr.gene_reaction_rule <> '' ORDER BY mr." + ID, reactionId, modelId);
   }
 
 
@@ -441,8 +436,8 @@ public class BiGGDB {
    * @return
    */
   public static Optional<String> getOrganism(String abbreviation) {
-    String query = "SELECT g." + COLUMN_ORGANISM + FROM + GENOME + " g, " + MODEL + " m WHERE m." + COLUMN_GENOME_ID
-      + " = g." + COLUMN_ID + " AND m." + COLUMN_BIGG_ID + " = ?";
+    String query = "SELECT g." + ORGANISM + " FROM " + GENOME + " g, " + MODEL + " m WHERE m." + GENOME_ID + " = g."
+      + ID + " AND m." + BIGG_ID + " = ?";
     return singleParamStatement(query, abbreviation);
   }
 
@@ -453,9 +448,9 @@ public class BiGGDB {
    */
   public static List<Pair<String, String>> getPublications(String abbreviation) {
     List<Pair<String, String>> results = new LinkedList<>();
-    String query = "SELECT p." + COLUMN_REFERENCE_TYPE + ", p." + COLUMN_REFERENCE_ID + " FROM  " + PUBLICATION + " p, "
-      + PUBLICATION_MODEL + " pm, " + MODEL + " m WHERE p." + COLUMN_ID + " = pm." + COLUMN_PUBLICATION_ID + " AND pm."
-      + COLUMN_MODEL_ID + " = m." + COLUMN_ID + " AND m." + COLUMN_BIGG_ID + " = ?";
+    String query = "SELECT p." + REFERENCE_TYPE + ", p." + REFERENCE_ID + " FROM  " + PUBLICATION + " p, "
+      + PUBLICATION_MODEL + " pm, " + MODEL + " m WHERE p." + ID + " = pm." + PUBLICATION_ID + " AND pm." + MODEL_ID
+      + " = m." + ID + " AND m." + BIGG_ID + " = ?";
     try {
       Connection connection = connector.getConnection();
       PreparedStatement pStatement = connection.prepareStatement(query);
@@ -532,8 +527,8 @@ public class BiGGDB {
    */
   public static Optional<Integer> getTaxonId(String abbreviation) {
     Integer result = null;
-    String query = SELECT + COLUMN_TAXON_ID + FROM + GENOME + " g, " + MODEL + " m WHERE g." + COLUMN_ID + " = m."
-      + COLUMN_GENOME_ID + " AND m." + COLUMN_BIGG_ID + " = ? AND taxon_id IS NOT NULL";
+    String query = "SELECT " + TAXON_ID + " FROM " + GENOME + " g, " + MODEL + " m WHERE g." + ID + " = m." + GENOME_ID
+      + " AND m." + BIGG_ID + " = ? AND taxon_id IS NOT NULL";
     try {
       Connection connection = connector.getConnection();
       PreparedStatement pStatement = connection.prepareStatement(query);
@@ -586,11 +581,10 @@ public class BiGGDB {
    * @return
    */
   public static Optional<Integer> getChargeByCompartment(String componentId, String compartmentId) {
-    String query = "SELECT DISTINCT mcc." + COLUMN_CHARGE + " FROM " + MCC + " mcc, " + COMPARTMENTALIZED_COMPONENT
-      + " cc, " + COMPONENT + " c, " + COMPARTMENT + " co WHERE c." + COLUMN_BIGG_ID + " = ? AND c." + COLUMN_ID
-      + " = cc." + COLUMN_COMPONENT_ID + " AND co." + COLUMN_BIGG_ID + " = ? AND co." + COLUMN_ID + " = cc."
-      + COLUMN_COMPARTMENT_ID + " and cc." + COLUMN_ID + " = mcc." + COLUMN_COMPARTMENTALIZED_COMPONENT_ID
-      + " AND LENGTH(CAST( mcc." + COLUMN_CHARGE + " AS text)) > 0 ORDER BY mcc." + COLUMN_CHARGE;
+    String query = "SELECT DISTINCT mcc." + CHARGE + " FROM " + MCC + " mcc, " + COMPARTMENTALIZED_COMPONENT + " cc, "
+      + COMPONENT + " c, " + COMPARTMENT + " co WHERE c." + BIGG_ID + " = ? AND c." + ID + " = cc." + COMPONENT_ID
+      + " AND co." + BIGG_ID + " = ? AND co." + ID + " = cc." + COMPARTMENT_ID + " and cc." + ID + " = mcc."
+      + COMPARTMENTALIZED_COMPONENT_ID + " AND LENGTH(CAST( mcc." + CHARGE + " AS text)) > 0 ORDER BY mcc." + CHARGE;
     Set<String> results = runChargeQuery(query, componentId, compartmentId);
     if (results.size() == 1) {
       return Optional.of(Integer.parseInt(results.iterator().next()));
@@ -638,11 +632,10 @@ public class BiGGDB {
    * @return
    */
   public static Optional<Integer> getCharge(String componentId, String modelId) {
-    String query =
-      "SELECT DISTINCT mcc." + COLUMN_CHARGE + "\n FROM " + COMPONENT + " c,\n" + COMPARTMENTALIZED_COMPONENT + " cc,\n"
-        + MODEL + " m,\n" + MCC + " mcc\n WHERE c." + COLUMN_ID + " = cc." + COLUMN_COMPONENT_ID + " AND\n cc."
-        + COLUMN_ID + " = mcc." + COLUMN_COMPARTMENTALIZED_COMPONENT_ID + " AND\n c." + COLUMN_BIGG_ID + " = ? AND\n m."
-        + COLUMN_BIGG_ID + " = ? AND\n m." + COLUMN_ID + " = mcc." + COLUMN_MODEL_ID + " AND mcc.charge IS NOT NULL";
+    String query = "SELECT DISTINCT mcc." + CHARGE + "\n FROM " + COMPONENT + " c,\n" + COMPARTMENTALIZED_COMPONENT
+      + " cc,\n" + MODEL + " m,\n" + MCC + " mcc\n WHERE c." + ID + " = cc." + COMPONENT_ID + " AND\n cc." + ID
+      + " = mcc." + COMPARTMENTALIZED_COMPONENT_ID + " AND\n c." + BIGG_ID + " = ? AND\n m." + BIGG_ID + " = ? AND\n m."
+      + ID + " = mcc." + MODEL_ID + " AND mcc.charge IS NOT NULL";
     Set<String> results = runChargeQuery(query, componentId, modelId);
     if (results.size() == 1) {
       return Optional.of(Integer.parseInt(results.iterator().next()));
@@ -678,19 +671,19 @@ public class BiGGDB {
     String query;
     switch (type) {
     case TYPE_SPECIES:
-      query = SELECT + "c." + COLUMN_BIGG_ID + FROM + COMPONENT + " c, " + DATA_SOURCE + " d, " + SYNONYM + " s" + WHERE
-        + "d." + COLUMN_BIGG_ID + " = ? AND d." + COLUMN_ID + " = s." + COLUMN_DATA_SOURCE_ID + " AND s."
-        + COLUMN_SYNONYM + " = ? AND s." + COLUMN_OME_ID + " = c." + COLUMN_ID;
+      query = "SELECT " + "c." + BIGG_ID + " FROM " + COMPONENT + " c, " + DATA_SOURCE + " d, " + SYNONYM + " s"
+        + " WHERE " + "d." + BIGG_ID + " = ? AND d." + ID + " = s." + DATA_SOURCE_ID + " AND s." + SYNONYM_COL
+        + " = ? AND s." + OME_ID + " = c." + ID;
       break;
     case TYPE_REACTION:
-      query = SELECT + "r." + COLUMN_BIGG_ID + FROM + REACTION + " r, " + DATA_SOURCE + " d, " + SYNONYM + " s" + WHERE
-        + "d." + COLUMN_BIGG_ID + " = ? AND d." + COLUMN_ID + " = s." + COLUMN_DATA_SOURCE_ID + " AND s."
-        + COLUMN_SYNONYM + " = ? AND s." + COLUMN_OME_ID + " = r." + COLUMN_ID;
+      query = "SELECT " + "r." + BIGG_ID + " FROM " + REACTION + " r, " + DATA_SOURCE + " d, " + SYNONYM + " s"
+        + " WHERE " + "d." + BIGG_ID + " = ? AND d." + ID + " = s." + DATA_SOURCE_ID + " AND s." + SYNONYM_COL
+        + " = ? AND s." + OME_ID + " = r." + ID;
       break;
     case TYPE_GENE_PRODUCT:
-      query = SELECT + "g." + COLUMN_LOCUS_TAG + FROM + GENE + " g, " + DATA_SOURCE + " d, " + SYNONYM + " s" + WHERE
-        + "d." + COLUMN_BIGG_ID + " = ? AND d." + COLUMN_ID + " = s." + COLUMN_DATA_SOURCE_ID + " AND s."
-        + COLUMN_SYNONYM + " = ? AND s." + COLUMN_OME_ID + " = g." + COLUMN_ID;
+      query = "SELECT " + "g." + LOCUS_TAG + " FROM " + GENE + " g, " + DATA_SOURCE + " d, " + SYNONYM + " s"
+        + " WHERE " + "d." + BIGG_ID + " = ? AND d." + ID + " = s." + DATA_SOURCE_ID + " AND s." + SYNONYM_COL
+        + " = ? AND s." + OME_ID + " = g." + ID;
       break;
     default:
       return Optional.empty();

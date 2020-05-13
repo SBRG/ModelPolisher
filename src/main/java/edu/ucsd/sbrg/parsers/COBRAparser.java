@@ -1,6 +1,3 @@
-/**
- *
- */
 package edu.ucsd.sbrg.parsers;
 
 import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;

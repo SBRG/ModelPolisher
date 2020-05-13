@@ -1,6 +1,11 @@
 package edu.ucsd.sbrg.bigg;
 
 import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_METABOLITE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
 import static java.text.MessageFormat.format;
 
 import java.io.BufferedReader;
@@ -342,7 +347,7 @@ public class BiGGAnnotation {
                            .flatMap(term -> term.getResources().stream()).collect(Collectors.toList());
       }
       // update id if we found something
-      return getBiGGIdFromResources(resources, BiGGDB.TYPE_SPECIES);
+      return getBiGGIdFromResources(resources, TYPE_SPECIES);
     });
     return id.map(BiGGId::createMetaboliteId).orElse(metaboliteId);
   }
@@ -447,7 +452,7 @@ public class BiGGAnnotation {
     // using AnnotateDB
     if (parameters.getAddADBAnnotations() && AnnotateDB.inUse() && isBiGGMetabolite) {
       // TODO: sabiork.reaction and strange IDs are returned, needs rework
-      Set<String> adb_annotations = AnnotateDB.getAnnotations(AnnotateDB.BIGG_METABOLITE, biggId.toBiGGId());
+      Set<String> adb_annotations = AnnotateDB.getAnnotations(BIGG_METABOLITE, biggId.toBiGGId());
       annotations.addAll(adb_annotations);
     }
     // don't add resources that are already present
@@ -571,7 +576,7 @@ public class BiGGAnnotation {
                 .flatMap(term -> term.getResources().stream()).collect(Collectors.toList());
       if (!resources.isEmpty()) {
         // update id if we found something
-        id = getBiGGIdFromResources(resources, BiGGDB.TYPE_REACTION).orElse(id);
+        id = getBiGGIdFromResources(resources, TYPE_REACTION).orElse(id);
       }
     }
     return BiGGId.createReactionId(id);
@@ -656,7 +661,7 @@ public class BiGGAnnotation {
     // using AnnotateDB
     if (parameters.getAddADBAnnotations() && AnnotateDB.inUse() && isBiGGReaction) {
       // TODO: probably similar problems as in the species case -- needs rework
-      Set<String> adb_annotations = AnnotateDB.getAnnotations(AnnotateDB.BIGG_REACTION, biggId.toBiGGId());
+      Set<String> adb_annotations = AnnotateDB.getAnnotations(BIGG_REACTION, biggId.toBiGGId());
       annotations.addAll(adb_annotations);
     }
     // add only annotations not already present in model
@@ -742,7 +747,7 @@ public class BiGGAnnotation {
                                           .flatMap(term -> term.getResources().stream()).collect(Collectors.toList());
       if (!resources.isEmpty()) {
         // update id if we found something
-        id = getBiGGIdFromResources(resources, BiGGDB.TYPE_GENE_PRODUCT).orElse(id);
+        id = getBiGGIdFromResources(resources, TYPE_GENE_PRODUCT).orElse(id);
       }
     }
     return BiGGId.createGeneId(id);
