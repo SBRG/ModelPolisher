@@ -584,9 +584,25 @@ public class BiGGAnnotation {
    */
   private void parseSubsystems(Reaction reaction, BiGGId biggId) {
     Model model = reaction.getModel();
-    List<String> subsystems = BiGGDB.getSubsystems(model.getId(), biggId.getAbbreviation());
+    boolean isBiGGModel = QueryOnce.isModel(model.getId());
+    List<String> subsystems;
+    if (isBiGGModel) {
+      subsystems = BiGGDB.getSubsystems(model.getId(), biggId.getAbbreviation());
+    } else {
+      logger.warning(
+        "Retrieving subsystem information for model with id not present in BiGG. Please validate obtained results");
+      subsystems = BiGGDB.getSubsystemsForReaction(biggId.getAbbreviation());
+    }
     if (subsystems.size() < 1) {
       return;
+    } else {
+      // filter out duplicates only differing in case - relevant for #getSubsystemsForReaction results
+      subsystems = subsystems.stream().map(String::toLowerCase).distinct().collect(Collectors.toList());
+      // Code already allows for multiple results from one query. If we have no BiGG model id, this might lead to
+      // ambiguous, incorrect results
+      if (!isBiGGModel && subsystems.size() > 1) {
+        return;
+      }
     }
     String groupKey = "GROUP_FOR_NAME";
     if (model.getUserObject(groupKey) == null) {

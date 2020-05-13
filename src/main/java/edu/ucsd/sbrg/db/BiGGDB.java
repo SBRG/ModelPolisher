@@ -175,6 +175,31 @@ public class BiGGDB {
 
 
   /**
+   * @param reactionBiGGid
+   * @return
+   */
+  public static List<String> getSubsystemsForReaction(String reactionBiGGid) {
+    String query =
+      "SELECT DISTINCT mr.subsystem FROM reaction r, model_reaction mr WHERE r.bigg_id = ? AND r.id = mr.reaction_id AND LENGTH(mr.subsystem) > 0";
+    List<String> list = new LinkedList<>();
+    try {
+      Connection connection = connector.getConnection();
+      PreparedStatement pStatement = connection.prepareStatement(query);
+      pStatement.setString(1, reactionBiGGid);
+      ResultSet resultSet = pStatement.executeQuery();
+      while (resultSet.next()) {
+        list.add(resultSet.getString(1));
+      }
+      pStatement.close();
+      connection.close();
+    } catch (SQLException exc) {
+      logger.warning(Utils.getMessage(exc));
+    }
+    return list;
+  }
+
+
+  /**
    * Get chemical formula for unknown model id
    *
    * @param componentId
