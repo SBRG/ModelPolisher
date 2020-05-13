@@ -709,7 +709,7 @@ public class SBMLPolisher {
               if (splits.length == 2) {
                 String association = splits[1];
                 if (!association.isEmpty()) {
-                  GPRParser.parseGPR(r, association, Parameters.get().getOmitGenericTerms());
+                  GPRParser.parseGPR(r, association, Parameters.get().omitGenericTerms());
                 }
               }
             }
@@ -1091,7 +1091,7 @@ public class SBMLPolisher {
    */
   public void setDocumentTitlePattern(String modelNamePattern) {
     Parameters parameters = Parameters.get();
-    parameters.documentTitlePattern = modelNamePattern;
+    parameters.setDocumentTitlePattern(modelNamePattern);
   }
 
 

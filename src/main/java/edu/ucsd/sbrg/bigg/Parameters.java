@@ -20,43 +20,43 @@ class Parameters {
   /**
    * @see ModelPolisherOptions#INCLUDE_ANY_URI
    */
-  Boolean includeAnyURI = null;
+  private Boolean includeAnyURI = null;
   /**
    * @see ModelPolisherOptions#ANNOTATE_WITH_BIGG
    */
-  Boolean annotateWithBiGG = null;
+  private Boolean annotateWithBiGG = null;
   /**
    * @see ModelPolisherOptions#OUTPUT_COMBINE
    */
-  Boolean outputCOMBINE = null;
+  private Boolean outputCOMBINE = null;
   /**
    * @see ModelPolisherOptions#ADD_ADB_ANNOTATIONS
    */
-  Boolean addADBAnnotations = null;
+  private Boolean addADBAnnotations = null;
   /**
    * @see ModelPolisherOptions#CHECK_MASS_BALANCE
    */
-  Boolean checkMassBalance = null;
+  private Boolean checkMassBalance = null;
   /**
    * @see ModelPolisherOptions#NO_MODEL_NOTES
    */
-  Boolean noModelNotes = null;
+  private Boolean noModelNotes = null;
   /**
    * @see ModelPolisherOptions#COMPRESSION_TYPE
    */
-  ModelPolisherOptions.Compression compression = ModelPolisherOptions.Compression.NONE;
+  private ModelPolisherOptions.Compression compression = ModelPolisherOptions.Compression.NONE;
   /**
    * Can be {@code null}
    *
    * @see ModelPolisherOptions#DOCUMENT_NOTES_FILE
    */
-  File documentNotesFile = null;
+  private File documentNotesFile = null;
   /**
    * Can be {@code null} (then a default is used).
    *
    * @see ModelPolisherOptions#DOCUMENT_TITLE_PATTERN
    */
-  String documentTitlePattern = null;
+  private String documentTitlePattern = null;
   /**
    * @see ModelPolisherOptions#FLUX_COEFFICIENTS
    */
@@ -64,21 +64,21 @@ class Parameters {
   /**
    * @see ModelPolisherOptions#FLUX_OBJECTIVES
    */
-  String[] fluxObjectives = null;
+  private String[] fluxObjectives = null;
   /**
    * Can be {@code null}
    *
    * @see ModelPolisherOptions#MODEL_NOTES_FILE
    */
-  File modelNotesFile = null;
+  private File modelNotesFile = null;
   /**
    * @see ModelPolisherOptions#OMIT_GENERIC_TERMS
    */
-  Boolean omitGenericTerms = null;
+  private Boolean omitGenericTerms = null;
   /**
    * @see ModelPolisherOptions#SBML_VALIDATION
    */
-  Boolean sbmlValidation = null;
+  private Boolean sbmlValidation = null;
 
   /**
    * 
@@ -172,72 +172,77 @@ class Parameters {
   }
 
 
-  public Boolean getIncludeAnyURI() {
+  public Boolean includeAnyURI() {
     return includeAnyURI;
   }
 
 
-  public Boolean getAnnotateWithBiGG() {
+  public Boolean annotateWithBiGG() {
     return annotateWithBiGG;
   }
 
 
-  public Boolean getOutputCOMBINE() {
+  public Boolean outputCOMBINE() {
     return outputCOMBINE;
   }
 
 
-  public Boolean getAddADBAnnotations() {
+  public Boolean addADBAnnotations() {
     return addADBAnnotations;
   }
 
 
-  public Boolean getCheckMassBalance() {
+  public Boolean checkMassBalance() {
     return checkMassBalance;
   }
 
 
-  public Boolean getNoModelNotes() {
+  public Boolean noModelNotes() {
     return noModelNotes;
   }
 
 
-  public ModelPolisherOptions.Compression getCompression() {
+  public ModelPolisherOptions.Compression compression() {
     return compression;
   }
 
 
-  public File getDocumentNotesFile() {
+  public File documentNotesFile() {
     return documentNotesFile;
   }
 
 
-  public String getDocumentTitlePattern() {
+  public String documentTitlePattern() {
     return documentTitlePattern;
   }
 
 
-  public double[] getFluxCoefficients() {
+  public double[] fluxCoefficients() {
     return fluxCoefficients;
   }
 
 
-  public String[] getFluxObjectives() {
+  public String[] fluxObjectives() {
     return fluxObjectives;
   }
 
 
-  public File getModelNotesFile() {
+  public File modelNotesFile() {
     return modelNotesFile;
   }
 
 
-  public Boolean getOmitGenericTerms() {
+  public Boolean omitGenericTerms() {
     return omitGenericTerms;
   }
 
 
-  public Boolean getSbmlValidation() {
+  public Boolean SBMLValidation() {
     return sbmlValidation;
+  }
+
+
+  public void setDocumentTitlePattern(String modelNamePattern) {
+    documentTitlePattern = modelNamePattern;
   }
 }

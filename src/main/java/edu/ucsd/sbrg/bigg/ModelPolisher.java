@@ -163,8 +163,8 @@ public class ModelPolisher extends Launcher {
   public void commandLineMode(AppConf appConf) {
     SBProperties args = appConf.getCmdArgs();
     parameters = Parameters.init(args);
-    DBConfig.initBiGG(args, parameters.annotateWithBiGG);
-    DBConfig.initADB(args, parameters.addADBAnnotations);
+    DBConfig.initBiGG(args, parameters.annotateWithBiGG());
+    DBConfig.initADB(args, parameters.addADBAnnotations());
     // Gives users the choice to pass an alternative model notes XHTML file to the program.
     try {
       batchProcess(new File(args.getProperty(IOOptions.INPUT)), new File(args.getProperty(IOOptions.OUTPUT)));
@@ -350,7 +350,7 @@ public class ModelPolisher extends Launcher {
     SBMLDocument doc;
     // reading or parsing input
     if (fileType.equals(FileType.MAT_FILE)) {
-      doc = COBRAparser.read(input, parameters.omitGenericTerms);
+      doc = COBRAparser.read(input, parameters.omitGenericTerms());
     } else if (fileType.equals(FileType.JSON_FILE)) {
       doc = JSONparser.read(input);
     } else {
@@ -431,7 +431,7 @@ public class ModelPolisher extends Launcher {
     SBMLPolisher polisher = initializeSBMLPolisher();
     doc = polisher.polish(doc);
     // Annotation
-    if (parameters.annotateWithBiGG) {
+    if (parameters.annotateWithBiGG()) {
       BiGGAnnotation annotation = setAnnotationParameters();
       doc = annotation.annotate(doc);
     }
@@ -439,16 +439,16 @@ public class ModelPolisher extends Launcher {
     logger.info(format(mpMessageBundle.getString("WRITE_FILE_INFO"), output.getAbsolutePath()));
     TidySBMLWriter.write(doc, output, getClass().getSimpleName(), getVersionNumber(), ' ', (short) 2);
     // produce COMBINE archive and delete output model and glossary
-    if (parameters.outputCOMBINE) {
+    if (parameters.outputCOMBINE()) {
       // producing & writing glossary
       writeGlossary(doc, output);
       writeCombineArchive(output);
     }
-    if (parameters.compression != Compression.NONE) {
-      String fileExtension = parameters.compression.getFileExtension();
+    if (parameters.compression() != Compression.NONE) {
+      String fileExtension = parameters.compression().getFileExtension();
       String archive = output.getAbsolutePath() + "." + fileExtension;
       logger.info(format(mpMessageBundle.getString("ARCHIVE"), archive));
-      switch (parameters.compression) {
+      switch (parameters.compression()) {
       case ZIP:
         ZIPUtils.ZIPcompress(new String[] {output.getAbsolutePath()}, archive, "SBML Archive", true);
         break;
@@ -461,7 +461,7 @@ public class ModelPolisher extends Launcher {
       if (!output.delete()) {
         logger.warning(String.format("Failed to delete output file '%s' after compression.", output.getAbsolutePath()));
       }
-      if (parameters.sbmlValidation) {
+      if (parameters.SBMLValidation()) {
         validate(archive, false);
       }
     }
@@ -489,16 +489,16 @@ public class ModelPolisher extends Launcher {
    */
   private SBMLPolisher initializeSBMLPolisher() {
     SBMLPolisher polisher = new SBMLPolisher();
-    polisher.setCheckMassBalance(parameters.checkMassBalance);
-    polisher.setOmitGenericTerms(parameters.omitGenericTerms);
-    if (parameters.includeAnyURI != null) {
-      polisher.setIncludeAnyURI(parameters.includeAnyURI);
+    polisher.setCheckMassBalance(parameters.checkMassBalance());
+    polisher.setOmitGenericTerms(parameters.omitGenericTerms());
+    if (parameters.includeAnyURI() != null) {
+      polisher.setIncludeAnyURI(parameters.includeAnyURI());
     }
-    if (parameters.documentTitlePattern != null) {
-      polisher.setDocumentTitlePattern(parameters.documentTitlePattern);
+    if (parameters.documentTitlePattern() != null) {
+      polisher.setDocumentTitlePattern(parameters.documentTitlePattern());
     }
     polisher.setFluxCoefficients(parameters.fluxCoefficients);
-    polisher.setFluxObjectives(parameters.fluxObjectives);
+    polisher.setFluxObjectives(parameters.fluxObjectives());
     return polisher;
   }
 
@@ -508,15 +508,15 @@ public class ModelPolisher extends Launcher {
    */
   private BiGGAnnotation setAnnotationParameters() {
     BiGGAnnotation annotation = new BiGGAnnotation();
-    if ((parameters.noModelNotes != null) && parameters.noModelNotes) {
+    if ((parameters.noModelNotes() != null) && parameters.noModelNotes()) {
       annotation.setDocumentNotesFile(null);
       annotation.setModelNotesFile(null);
     } else {
-      if (parameters.documentNotesFile != null) {
-        annotation.setDocumentNotesFile(parameters.documentNotesFile);
+      if (parameters.documentNotesFile() != null) {
+        annotation.setDocumentNotesFile(parameters.documentNotesFile());
       }
-      if (parameters.modelNotesFile != null) {
-        annotation.setModelNotesFile(parameters.modelNotesFile);
+      if (parameters.modelNotesFile() != null) {
+        annotation.setModelNotesFile(parameters.modelNotesFile());
       }
     }
     return annotation;

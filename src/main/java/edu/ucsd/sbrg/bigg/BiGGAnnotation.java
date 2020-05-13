@@ -30,6 +30,8 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.swing.tree.TreeNode;
@@ -225,7 +227,7 @@ public class BiGGAnnotation {
       taxonId -> model.addCVTerm(new CVTerm(CVTerm.Qualifier.BQB_HAS_TAXON, Registry.createURI("taxonomy", taxonId))));
     BiGGDB.getOrganism(model.getId()).ifPresent(organism -> processReplacements(model, organism));
     if (QueryOnce.isModel(model.getId())) {
-      model.addCVTerm(new CVTerm(CVTerm.Qualifier.BQM_IS, Registry.createURI("bigg.model", model.getId())));
+      addBiGGModelAnnotations(model);
     }
     if (!model.isSetMetaId() && (model.getCVTermCount() > 0)) {
       model.setMetaId(model.getId());
@@ -240,11 +242,40 @@ public class BiGGAnnotation {
 
   /**
    * @param model
+   */
+  private void addBiGGModelAnnotations(Model model) {
+    model.addCVTerm(new CVTerm(CVTerm.Qualifier.BQM_IS, Registry.createURI("bigg.model", model.getId())));
+    String accession = BiGGDB.getGenomeAccesion(model.getId());
+    Matcher refseqMatcher =
+      Pattern.compile("^(((AC|AP|NC|NG|NM|NP|NR|NT|NW|XM|XP|XR|YP|ZP)_\\d+)|(NZ\\_[A-Z]{2,4}\\d+))(\\.\\d+)?$")
+             .matcher(accession);
+    CVTerm term = new CVTerm(Qualifier.BQB_IS_VERSION_OF);
+    if (refseqMatcher.matches()) {
+      term.addResource(Registry.createShortURI("refseq:" + accession));
+    } else {
+      if (Parameters.get().includeAnyURI()) {
+        Matcher genomeAssemblyMatcher = Pattern.compile("^GC[AF]_[0-9]{9}\\.[0-9]+$").matcher(accession);
+        if (genomeAssemblyMatcher.matches()) {
+          // resolution issues with https://identifiers.org/insdc.gca, resolve non MIRIAM way (see Issue #96)
+          term.addResource("https://www.ncbi.nlm.nih.gov/assembly/" + accession);
+        } else {
+          term.addResource("https://www.ncbi.nlm.nih.gov/nuccore/" + accession);
+        }
+      }
+    }
+    if (term.getResourceCount() > 0) {
+      model.addCVTerm(term);
+    }
+  }
+
+
+  /**
+   * @param model
    * @param organism
    */
   private void processReplacements(Model model, String organism) {
     Parameters parameters = Parameters.get();
-    String name = parameters.getDocumentTitlePattern();
+    String name = parameters.documentTitlePattern();
     name = name.replace("[biggId]", model.getId());
     name = name.replace("[organism]", organism);
     replacements.put("${title}", name);
@@ -413,7 +444,7 @@ public class BiGGAnnotation {
         break;
       default:
         Parameters parameters = Parameters.get();
-        if (parameters.getOmitGenericTerms()) {
+        if (parameters.omitGenericTerms()) {
           species.setSBOTerm(SBO.getMaterialEntity());
         }
         break;
@@ -446,11 +477,11 @@ public class BiGGAnnotation {
       annotations.add(Registry.createURI("bigg.metabolite", biggId));
     }
     Parameters parameters = Parameters.get();
-    Set<String> linkOut = BiGGDB.getResources(biggId, parameters.getIncludeAnyURI(), false);
+    Set<String> linkOut = BiGGDB.getResources(biggId, parameters.includeAnyURI(), false);
     // convert to set to remove possible duplicates; TreeSet respects order
     annotations.addAll(linkOut);
     // using AnnotateDB
-    if (parameters.getAddADBAnnotations() && AnnotateDB.inUse() && isBiGGMetabolite) {
+    if (parameters.addADBAnnotations() && AnnotateDB.inUse() && isBiGGMetabolite) {
       // TODO: sabiork.reaction and strange IDs are returned, needs rework
       Set<String> adb_annotations = AnnotateDB.getAnnotations(BIGG_METABOLITE, biggId.toBiGGId());
       annotations.addAll(adb_annotations);
@@ -539,7 +570,7 @@ public class BiGGAnnotation {
       if (!reaction.isSetSBOTerm()) {
         if (BiGGDB.isPseudoreaction(abbreviation)) {
           reaction.setSBOTerm(631);
-        } else if (!parameters.getOmitGenericTerms()) {
+        } else if (!parameters.omitGenericTerms()) {
           reaction.setSBOTerm(375); // generic process
         }
       }
@@ -552,7 +583,7 @@ public class BiGGAnnotation {
             .map(SBMLPolisher::polishName).ifPresent(reaction::setName);
       List<String> geneReactionRules = BiGGDB.getGeneReactionRule(abbreviation, reaction.getModel().getId());
       for (String geneRactionRule : geneReactionRules) {
-        GPRParser.parseGPR(reaction, geneRactionRule, parameters.getOmitGenericTerms());
+        GPRParser.parseGPR(reaction, geneRactionRule, parameters.omitGenericTerms());
       }
       parseSubsystems(reaction, biggId);
       setCVTermResources(reaction, biggId);
@@ -656,10 +687,10 @@ public class BiGGAnnotation {
       annotations.add(Registry.createURI("bigg.reaction", biggId));
     }
     Parameters parameters = Parameters.get();
-    Set<String> linkOut = BiGGDB.getResources(biggId, parameters.getIncludeAnyURI(), true);
+    Set<String> linkOut = BiGGDB.getResources(biggId, parameters.includeAnyURI(), true);
     annotations.addAll(linkOut);
     // using AnnotateDB
-    if (parameters.getAddADBAnnotations() && AnnotateDB.inUse() && isBiGGReaction) {
+    if (parameters.addADBAnnotations() && AnnotateDB.inUse() && isBiGGReaction) {
       // TODO: probably similar problems as in the species case -- needs rework
       Set<String> adb_annotations = AnnotateDB.getAnnotations(BIGG_REACTION, biggId.toBiGGId());
       annotations.addAll(adb_annotations);

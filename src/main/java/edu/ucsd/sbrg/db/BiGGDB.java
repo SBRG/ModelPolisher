@@ -18,6 +18,7 @@ import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ACCESSION_VALUE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.BIGG_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.CHARGE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.COMPARTMENTALIZED_COMPONENT_ID;
@@ -547,6 +548,35 @@ public class BiGGDB {
       logger.warning(format(mpMessageBundle.getString("GET_TAXON_ERROR"), abbreviation, Utils.getMessage(exc)));
     }
     return result == null ? Optional.empty() : Optional.of(result);
+  }
+
+
+  /**
+   * @param id:
+   *        Model id present in BiGG
+   * @return Accession that can be resolved as using either https://identifiers.org/refseq:{$id},
+   *         https://www.ncbi.nlm.nih.gov/nuccore/{$id} or https://www.ncbi.nlm.nih.gov/assembly/{$id}
+   */
+  public static String getGenomeAccesion(String id) {
+    String query = "SELECT g." + ACCESSION_VALUE + " FROM " + GENOME + " g, " + MODEL + " m WHERE m." + BIGG_ID
+      + " = ? AND m." + GENOME_ID + " = g." + ID;
+    String result = "";
+    try {
+      Connection connection = connector.getConnection();
+      PreparedStatement pStatement = connection.prepareStatement(query);
+      pStatement.setString(1, id);
+      ResultSet resultSet = pStatement.executeQuery();
+      // should always be exactly one entry, as we check beforehand, if we have a BiGG model id
+      if (resultSet.next()) {
+        result = resultSet.getString(1);
+      }
+      pStatement.close();
+      connection.close();
+    } catch (SQLException e) {
+      logger.warning(format("Could not retrieve genome accession for model id {0}.", id));
+    }
+    // Will be non empty, as query always returns exactly one result
+    return result;
   }
 
 
