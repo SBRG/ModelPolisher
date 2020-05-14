@@ -25,14 +25,17 @@ import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.COMPARTMENTALIZED
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.COMPARTMENT_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.COMPONENT_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.DATA_SOURCE_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.DATE_TIME;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.FORMULA;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.GENE_REACTION_RULE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.GENOME_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.LOCUS_TAG;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.MODEL_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.NAME;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.OME_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ORGANISM;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.PSEUDOREACTION;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.PUBLICATION_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.REACTION_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.REFERENCE_ID;
@@ -40,9 +43,11 @@ import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.REFERENCE_TYPE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.SUBSYSTEM;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.SYNONYM_COL;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.TAXON_ID;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.TYPE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPARTMENT;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPARTMENTALIZED_COMPONENT;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPONENT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.DATABASE_VERSION;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.DATA_SOURCE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.GENE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.GENOME;
@@ -57,6 +62,7 @@ import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.REACTION;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.REFSEQ_NAME;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.REFSEQ_PATTERN;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.SYNONYM;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.URL;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.URL_PREFIX;
 import static java.text.MessageFormat.format;
 import static org.sbml.jsbml.util.Pair.pairOf;
@@ -104,6 +110,13 @@ public class BiGGDB {
   }
 
 
+  /**
+   * @param host
+   * @param port
+   * @param user
+   * @param passwd
+   * @param name
+   */
   public static void init(String host, String port, String user, String passwd, String name) {
     connector = new PostgreSQLConnector(host, Integer.parseInt(port), user, passwd, name);
   }
@@ -118,7 +131,7 @@ public class BiGGDB {
 
 
   /**
-   * @return
+   * @return True if connector is initialized
    */
   public static boolean inUse() {
     return connector != null;
@@ -132,7 +145,7 @@ public class BiGGDB {
     Optional<Date> date = Optional.empty();
     try {
       Connection connection = connector.getConnection();
-      PreparedStatement pStatement = connection.prepareStatement("Select date_time FROM database_version");
+      PreparedStatement pStatement = connection.prepareStatement("Select " + DATE_TIME + " FROM " + DATABASE_VERSION);
       ResultSet resultSet = pStatement.executeQuery();
       if (resultSet.next()) {
         date = Optional.of(resultSet.getDate(1));
@@ -153,8 +166,8 @@ public class BiGGDB {
    */
   public static List<String> getSubsystems(String modelBiGGid, String reactionBiGGid) {
     String query = "SELECT DISTINCT mr." + SUBSYSTEM + " FROM " + REACTION + " r, " + MODEL + " m, " + MODEL_REACTION
-      + " mr WHERE m." + BIGG_ID + " = ? AND r." + BIGG_ID + " = ? AND m." + ID + " = mr." + MODEL_ID
-      + " AND r.id = mr.reaction_id AND LENGTH(mr.subsystem) > 0";
+      + " mr WHERE m." + BIGG_ID + " = ? AND r." + BIGG_ID + " = ? AND m." + ID + " = mr." + MODEL_ID + " AND r." + ID
+      + " = mr." + REACTION_ID + " AND LENGTH(mr." + SUBSYSTEM + ") > 0";
     List<String> list = new LinkedList<>();
     try {
       Connection connection = connector.getConnection();
@@ -179,8 +192,8 @@ public class BiGGDB {
    * @return
    */
   public static List<String> getSubsystemsForReaction(String reactionBiGGid) {
-    String query =
-      "SELECT DISTINCT mr.subsystem FROM reaction r, model_reaction mr WHERE r.bigg_id = ? AND r.id = mr.reaction_id AND LENGTH(mr.subsystem) > 0";
+    String query = "SELECT DISTINCT mr." + SUBSYSTEM + " FROM " + REACTION + " r, " + MODEL_REACTION + " mr WHERE r."
+      + BIGG_ID + " = ? AND r." + ID + " = mr." + REACTION_ID + " AND LENGTH(mr." + SUBSYSTEM + ") > 0";
     List<String> list = new LinkedList<>();
     try {
       Connection connection = connector.getConnection();
@@ -210,13 +223,13 @@ public class BiGGDB {
     String query = "SELECT DISTINCT mcc." + FORMULA + " FROM " + MCC + " mcc, " + COMPARTMENTALIZED_COMPONENT + " cc, "
       + COMPONENT + " c, " + COMPARTMENT + " co WHERE c." + BIGG_ID + " = ? AND c." + ID + " = cc." + COMPONENT_ID
       + " AND co." + BIGG_ID + " = ? AND co." + ID + " = cc." + COMPARTMENT_ID + " and cc." + ID + " = mcc."
-      + COMPARTMENTALIZED_COMPONENT_ID + " AND mcc.formula <> '' ORDER BY mcc." + FORMULA;
+      + COMPARTMENTALIZED_COMPONENT_ID + " AND mcc." + FORMULA + " <> '' ORDER BY mcc." + FORMULA;
     Set<String> results = runFormulaQuery(query, componentId, compartmentId);
     if (results.size() == 1) {
       return Optional.of(results.iterator().next());
     } else {
       if (results.size() > 1) {
-        logger.info(String.format("Could not retrieve unique chemical formula for component '%s' and compartment '%s'",
+        logger.info(format("Could not retrieve unique chemical formula for component '{0}' and compartment '{1}'",
           componentId, compartmentId));
       }
       return Optional.empty();
@@ -261,13 +274,13 @@ public class BiGGDB {
     String query = "SELECT DISTINCT mcc." + FORMULA + "\n FROM " + COMPONENT + " c,\n" + COMPARTMENTALIZED_COMPONENT
       + " cc,\n" + MODEL + " m,\n" + MCC + " mcc\n WHERE c." + ID + " = cc." + COMPONENT_ID + " AND\n cc." + ID
       + " = mcc." + COMPARTMENTALIZED_COMPONENT_ID + " AND\n c." + BIGG_ID + " = ? AND\n m." + BIGG_ID + " = ? AND\n m."
-      + ID + " = mcc." + MODEL_ID + " AND mcc.formula <> ''";
+      + ID + " = mcc." + MODEL_ID + " AND mcc." + FORMULA + " <> ''";
     Set<String> results = runFormulaQuery(query, componentId, modelId);
     if (results.size() == 1) {
       return Optional.of(results.iterator().next());
     } else {
       if (results.size() > 1) {
-        logger.info(String.format("Could not retrieve unique chemical formula for component '%s' and model '%s'",
+        logger.info(format("Could not retrieve unique chemical formula for component '{0}' and model '{1}'",
           componentId, modelId));
       }
       return Optional.empty();
@@ -280,7 +293,7 @@ public class BiGGDB {
    * @return
    */
   public static Optional<String> getCompartmentName(BiGGId biggId) {
-    String query = "SELECT name FROM compartment WHERE bigg_id = ? AND name <> ''";
+    String query = "SELECT " + NAME + " FROM " + COMPARTMENT + " WHERE " + BIGG_ID + " = ? AND " + NAME + " <> ''";
     return singleParamStatement(query, biggId.getAbbreviation());
   }
 
@@ -310,7 +323,7 @@ public class BiGGDB {
       return Optional.of(results.iterator().next());
     } else {
       if (results.size() > 1) {
-        logger.severe(String.format("Query returned multiple results for parameter %s\nQuery:\n%s", param, query));
+        logger.severe(format("Query returned multiple results for parameter {0}\nQuery:\n{1}", param, query));
       }
       return Optional.empty();
     }
@@ -322,7 +335,7 @@ public class BiGGDB {
    * @return
    */
   public static Optional<String> getComponentName(BiGGId biggId) {
-    String query = "SELECT name FROM component WHERE bigg_id = ? AND name <> ''";
+    String query = "SELECT " + NAME + " FROM " + COMPONENT + " WHERE " + BIGG_ID + " = ? AND " + NAME + " <> ''";
     return singleParamStatement(query, biggId.getAbbreviation());
   }
 
@@ -332,7 +345,7 @@ public class BiGGDB {
    * @return
    */
   public static Optional<String> getComponentType(BiGGId biggId) {
-    String query = "SELECT type FROM component WHERE bigg_id = ? AND name <> ''";
+    String query = "SELECT " + TYPE + " FROM " + COMPONENT + " WHERE " + BIGG_ID + " = ? AND " + NAME + " <> ''";
     return singleParamStatement(query, biggId.getAbbreviation());
   }
 
@@ -386,7 +399,7 @@ public class BiGGDB {
   public static Optional<String> getGeneName(String label) {
     String query = "SELECT s." + SYNONYM + "\n" + "FROM  " + DATA_SOURCE + " d, " + SYNONYM + " s, " + GENOME_REGION
       + " gr\n" + "WHERE d." + ID + " = s." + DATA_SOURCE_ID + " AND\n s." + OME_ID + " = gr." + ID + " AND\n gr."
-      + BIGG_ID + " = ? AND\n d." + BIGG_ID + " LIKE " + REFSEQ_NAME + " AND s.synonym <> ''";
+      + BIGG_ID + " = ? AND\n d." + BIGG_ID + " LIKE " + REFSEQ_NAME + " AND s." + SYNONYM_COL + " <> ''";
     return singleParamStatement(query, label);
   }
 
@@ -401,8 +414,8 @@ public class BiGGDB {
       + ", 'or', '||'), 'and', '&&'), '.'), '.', '__SBML_DOT__'), '_AT', '__SBML_DOT__') AS " + GENE_REACTION_RULE
       + " FROM " + MODEL_REACTION + " mr, " + REACTION + " r, " + MODEL + " m WHERE r." + ID + " = mr." + REACTION_ID
       + " AND m." + ID + " = mr." + MODEL_ID + " AND mr." + GENE_REACTION_RULE + " IS NOT NULL AND  LENGTH(mr."
-      + GENE_REACTION_RULE + ") > 0 AND r." + BIGG_ID + " = ? AND m." + BIGG_ID
-      + " = ? AND mr.gene_reaction_rule <> '' ORDER BY mr." + ID, reactionId, modelId);
+      + GENE_REACTION_RULE + ") > 0 AND r." + BIGG_ID + " = ? AND m." + BIGG_ID + " = ? AND mr." + GENE_REACTION_RULE
+      + " <> '' ORDER BY mr." + ID, reactionId, modelId);
   }
 
 
@@ -475,7 +488,7 @@ public class BiGGDB {
    * @return
    */
   public static Optional<String> getReactionName(String abbreviation) {
-    String query = "SELECT name FROM reaction WHERE bigg_id = ? AND name <> ''";
+    String query = "SELECT " + NAME + " FROM " + REACTION + " WHERE " + BIGG_ID + " = ? AND " + NAME + " <> ''";
     return singleParamStatement(query, abbreviation);
   }
 
@@ -490,9 +503,11 @@ public class BiGGDB {
     String type = isReaction ? REACTION : COMPONENT;
     Set<String> resources = new TreeSet<>();
     try {
-      String query = String.format(
-        "SELECT CONCAT(url_prefix, s.synonym) AS url FROM %s t, synonym s, data_source d WHERE t.id = s.ome_id AND s.data_source_id = d.id AND url_prefix IS NOT NULL AND %s AND t.bigg_id = ? %s",
-        type, getTypeQuery(isReaction), includeAnyURI ? "" : "AND url_prefix like '%%identifiers.org%%'");
+      String query = format(
+        "SELECT CONCAT(" + URL_PREFIX + ", s." + SYNONYM_COL + ") AS " + URL + " FROM {0} t, " + SYNONYM + " s, "
+          + DATA_SOURCE + " d WHERE t." + ID + " = s." + OME_ID + " AND s." + DATA_SOURCE_ID + " = d." + ID + " AND "
+          + URL_PREFIX + " IS NOT NULL AND {1} AND t." + BIGG_ID + " = ? {2}",
+        type, getTypeQuery(isReaction), includeAnyURI ? "" : "AND " + URL_PREFIX + " LIKE '%%identifiers.org%%'");
       Connection connection = connector.getConnection();
       PreparedStatement pStatement = connection.prepareStatement(query);
       pStatement.setString(1, biggId.getAbbreviation());
@@ -515,9 +530,9 @@ public class BiGGDB {
    */
   private static String getTypeQuery(boolean isReaction) {
     if (isReaction) {
-      return "CAST(s.type AS \"text\") = '" + REACTION + "'";
+      return "CAST(s." + TYPE + " AS \"text\") = '" + REACTION + "'";
     }
-    return "(CAST(s.type AS \"text\") = '" + COMPONENT + "' OR CAST(s.type AS \"text\") = '"
+    return "(CAST(s." + TYPE + " AS \"text\") = '" + COMPONENT + "' OR CAST(s." + TYPE + " AS \"text\") = '"
       + COMPARTMENTALIZED_COMPONENT + "')";
   }
 
@@ -529,7 +544,7 @@ public class BiGGDB {
   public static Optional<Integer> getTaxonId(String abbreviation) {
     Integer result = null;
     String query = "SELECT " + TAXON_ID + " FROM " + GENOME + " g, " + MODEL + " m WHERE g." + ID + " = m." + GENOME_ID
-      + " AND m." + BIGG_ID + " = ? AND taxon_id IS NOT NULL";
+      + " AND m." + BIGG_ID + " = ? AND " + TAXON_ID + " IS NOT NULL";
     try {
       Connection connection = connector.getConnection();
       PreparedStatement pStatement = connection.prepareStatement(query);
@@ -537,7 +552,7 @@ public class BiGGDB {
       ResultSet resultSet = pStatement.executeQuery();
       while (resultSet.next()) {
         if (result != null) {
-          logger.severe(String.format("Taxon id query returned multiple results for abbreviation: %s", abbreviation));
+          logger.severe(format("Taxon id query returned multiple results for abbreviation: {0}", abbreviation));
         } else {
           result = resultSet.getInt(1);
         }
@@ -588,7 +603,7 @@ public class BiGGDB {
     Set<String> biggIds = new LinkedHashSet<>();
     try {
       Connection connection = connector.getConnection();
-      String query = "SELECT bigg_id FROM " + table + " ORDER BY bigg_id";
+      String query = "SELECT " + BIGG_ID + " FROM " + table + " ORDER BY " + BIGG_ID;
       PreparedStatement pStatement = connection.prepareStatement(query);
       ResultSet resultSet = pStatement.executeQuery();
       while (resultSet.next()) {
@@ -597,7 +612,7 @@ public class BiGGDB {
       pStatement.close();
       connection.close();
     } catch (SQLException exc) {
-      logger.warning(String.format("Failed to fetch BiGGIDs for table '%s': '%s'", table, Utils.getMessage(exc)));
+      logger.warning(format("Failed to fetch BiGGIDs for table '{0}': '{1}'", table, Utils.getMessage(exc)));
     }
     return biggIds;
   }
@@ -620,8 +635,8 @@ public class BiGGDB {
       return Optional.of(Integer.parseInt(results.iterator().next()));
     } else {
       if (results.size() > 1) {
-        logger.warning(String.format("Could not retrieve unique charge for component '%s' and compartment '%s'",
-          componentId, compartmentId));
+        logger.warning(format("Could not retrieve unique charge for component '{0}' and compartment '{1}'", componentId,
+          compartmentId));
       }
       return Optional.empty();
     }
@@ -665,14 +680,14 @@ public class BiGGDB {
     String query = "SELECT DISTINCT mcc." + CHARGE + "\n FROM " + COMPONENT + " c,\n" + COMPARTMENTALIZED_COMPONENT
       + " cc,\n" + MODEL + " m,\n" + MCC + " mcc\n WHERE c." + ID + " = cc." + COMPONENT_ID + " AND\n cc." + ID
       + " = mcc." + COMPARTMENTALIZED_COMPONENT_ID + " AND\n c." + BIGG_ID + " = ? AND\n m." + BIGG_ID + " = ? AND\n m."
-      + ID + " = mcc." + MODEL_ID + " AND mcc.charge IS NOT NULL";
+      + ID + " = mcc." + MODEL_ID + " AND mcc." + CHARGE + " IS NOT NULL";
     Set<String> results = runChargeQuery(query, componentId, modelId);
     if (results.size() == 1) {
       return Optional.of(Integer.parseInt(results.iterator().next()));
     } else {
       if (results.size() > 1) {
-        logger.warning(String.format("Could not retrieve unique charge for component '%s' and compartment '%s'",
-          componentId, modelId));
+        logger.warning(
+          format("Could not retrieve unique charge for component '{0}' and compartment '{1}'", componentId, modelId));
       }
       return Optional.empty();
     }
@@ -684,7 +699,7 @@ public class BiGGDB {
    * @return
    */
   public static boolean isPseudoreaction(String reactionId) {
-    String query = "SELECT pseudoreaction FROM reaction WHERE bigg_id = ?";
+    String query = "SELECT " + PSEUDOREACTION + " FROM " + REACTION + " WHERE " + BIGG_ID + " = ?";
     Optional<String> result = singleParamStatement(query, reactionId);
     return result.isPresent() && result.get().equals("t");
   }
