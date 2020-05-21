@@ -1,17 +1,6 @@
 package edu.ucsd.sbrg.db;
 
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_METABOLITE;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.METABOLITE_PREFIX;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.REACTION_PREFIX;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.NAMESPACE;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.SOURCE_NAMESPACE;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.SOURCE_TERM;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.TARGET_NAMESPACE;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.TARGET_TERM;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.URLPATTERN;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Table.ADB_COLLECTION;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Table.MAPPING_VIEW;
+import de.zbit.util.Utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,7 +10,18 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import de.zbit.util.Utils;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_METABOLITE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.NAMESPACE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.SOURCE_NAMESPACE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.SOURCE_TERM;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.TARGET_NAMESPACE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.TARGET_TERM;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Column.URLPATTERN;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.METABOLITE_PREFIX;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.REACTION_PREFIX;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Table.ADB_COLLECTION;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.Table.MAPPING_VIEW;
 
 /**
  * @author Kaustubh Trivedi
@@ -80,7 +80,7 @@ public class AnnotateDB {
     }
     if (type.equals(BIGG_METABOLITE) && biggId.startsWith(METABOLITE_PREFIX)) {
       biggId = biggId.substring(2);
-    } else if (type.equals(BIGG_METABOLITE) && biggId.startsWith(REACTION_PREFIX)) {
+    } else if (type.equals(BIGG_REACTION) && biggId.startsWith(REACTION_PREFIX)) {
       biggId = biggId.substring(2);
     }
     if (biggId.endsWith("_")) {
@@ -108,4 +108,5 @@ public class AnnotateDB {
     }
     return annotations;
   }
+
 }

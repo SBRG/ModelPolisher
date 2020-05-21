@@ -14,10 +14,28 @@
  */
 package edu.ucsd.sbrg.db;
 
+import de.zbit.util.Utils;
+import edu.ucsd.sbrg.bigg.BiGGId;
+import edu.ucsd.sbrg.miriam.Registry;
+import org.sbml.jsbml.util.Pair;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ACCESSION_VALUE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.BIGG_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.CHARGE;
@@ -44,6 +62,9 @@ import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.SUBSYSTEM;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.SYNONYM_COL;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.TAXON_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.TYPE;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPARTMENT;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPARTMENTALIZED_COMPONENT;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPONENT;
@@ -66,28 +87,6 @@ import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.URL;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.URL_PREFIX;
 import static java.text.MessageFormat.format;
 import static org.sbml.jsbml.util.Pair.pairOf;
-
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import org.sbml.jsbml.util.Pair;
-
-import de.zbit.util.Utils;
-import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.Registry;
 
 /**
  * @author Andreas Dr&auml;ger
@@ -145,7 +144,7 @@ public class BiGGDB {
     Optional<Date> date = Optional.empty();
     try {
       Connection connection = connector.getConnection();
-      PreparedStatement pStatement = connection.prepareStatement("Select " + DATE_TIME + " FROM " + DATABASE_VERSION);
+      PreparedStatement pStatement = connection.prepareStatement("SELECT " + DATE_TIME + " FROM " + DATABASE_VERSION);
       ResultSet resultSet = pStatement.executeQuery();
       if (resultSet.next()) {
         date = Optional.of(resultSet.getDate(1));
@@ -714,21 +713,17 @@ public class BiGGDB {
   public static Optional<String> getBiggIdFromSynonym(String dataSourceId, String synonym, String type) {
     Set<String> results = new HashSet<>();
     String query;
+    String sharedQuerySubstring = DATA_SOURCE + " d, " + SYNONYM + " s" + " WHERE " + "d." + BIGG_ID + " = ? AND d."
+      + ID + " = s." + DATA_SOURCE_ID + " AND s." + SYNONYM_COL + " = ? AND s." + OME_ID;
     switch (type) {
     case TYPE_SPECIES:
-      query = "SELECT " + "c." + BIGG_ID + " FROM " + COMPONENT + " c, " + DATA_SOURCE + " d, " + SYNONYM + " s"
-        + " WHERE " + "d." + BIGG_ID + " = ? AND d." + ID + " = s." + DATA_SOURCE_ID + " AND s." + SYNONYM_COL
-        + " = ? AND s." + OME_ID + " = c." + ID;
+      query = "SELECT " + "c." + BIGG_ID + " FROM " + COMPONENT + " c, " + sharedQuerySubstring + " = c." + ID;
       break;
     case TYPE_REACTION:
-      query = "SELECT " + "r." + BIGG_ID + " FROM " + REACTION + " r, " + DATA_SOURCE + " d, " + SYNONYM + " s"
-        + " WHERE " + "d." + BIGG_ID + " = ? AND d." + ID + " = s." + DATA_SOURCE_ID + " AND s." + SYNONYM_COL
-        + " = ? AND s." + OME_ID + " = r." + ID;
+      query = "SELECT " + "r." + BIGG_ID + " FROM " + REACTION + " r, " + sharedQuerySubstring + " = r." + ID;
       break;
     case TYPE_GENE_PRODUCT:
-      query = "SELECT " + "g." + LOCUS_TAG + " FROM " + GENE + " g, " + DATA_SOURCE + " d, " + SYNONYM + " s"
-        + " WHERE " + "d." + BIGG_ID + " = ? AND d." + ID + " = s." + DATA_SOURCE_ID + " AND s." + SYNONYM_COL
-        + " = ? AND s." + OME_ID + " = g." + ID;
+      query = "SELECT " + "g." + LOCUS_TAG + " FROM " + GENE + " g, " + sharedQuerySubstring + " = g." + ID;
       break;
     default:
       return Optional.empty();

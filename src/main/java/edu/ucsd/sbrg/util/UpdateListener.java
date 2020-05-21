@@ -1,19 +1,4 @@
-/**
- * 
- */
 package edu.ucsd.sbrg.util;
-
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-
-import java.beans.PropertyChangeEvent;
-import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import javax.swing.tree.TreeNode;
 
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.NamedSBase;
@@ -27,6 +12,17 @@ import org.sbml.jsbml.ext.groups.Member;
 import org.sbml.jsbml.util.TreeNodeChangeEvent;
 import org.sbml.jsbml.util.TreeNodeChangeListener;
 import org.sbml.jsbml.util.TreeNodeRemovedEvent;
+
+import javax.swing.tree.TreeNode;
+import java.beans.PropertyChangeEvent;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
 
 /**
  * This class keeps track of changes to the model and tries to keep cross
@@ -45,7 +41,6 @@ public class UpdateListener implements TreeNodeChangeListener {
    * used.
    */
   private Map<String, Set<GeneProductRef>> geneIdToAssociation;
-
 
   /**
    * 

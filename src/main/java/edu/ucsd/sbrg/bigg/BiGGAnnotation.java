@@ -1,13 +1,36 @@
 package edu.ucsd.sbrg.bigg;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_METABOLITE;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
-import static java.text.MessageFormat.format;
+import de.zbit.util.ResourceManager;
+import de.zbit.util.Utils;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
+import edu.ucsd.sbrg.db.AnnotateDB;
+import edu.ucsd.sbrg.db.BiGGDB;
+import edu.ucsd.sbrg.db.BiGGDBContract;
+import edu.ucsd.sbrg.db.QueryOnce;
+import edu.ucsd.sbrg.miriam.Registry;
+import edu.ucsd.sbrg.util.GPRParser;
+import edu.ucsd.sbrg.util.SBMLUtils;
+import org.sbml.jsbml.CVTerm;
+import org.sbml.jsbml.CVTerm.Qualifier;
+import org.sbml.jsbml.Compartment;
+import org.sbml.jsbml.Model;
+import org.sbml.jsbml.Reaction;
+import org.sbml.jsbml.SBMLDocument;
+import org.sbml.jsbml.SBO;
+import org.sbml.jsbml.SBase;
+import org.sbml.jsbml.Species;
+import org.sbml.jsbml.ext.fbc.FBCConstants;
+import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
+import org.sbml.jsbml.ext.fbc.FBCSpeciesPlugin;
+import org.sbml.jsbml.ext.fbc.GeneProduct;
+import org.sbml.jsbml.ext.groups.Group;
+import org.sbml.jsbml.ext.groups.GroupsConstants;
+import org.sbml.jsbml.ext.groups.GroupsModelPlugin;
+import org.sbml.jsbml.util.Pair;
 
+import javax.swing.tree.TreeNode;
+import javax.xml.stream.XMLStreamException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,37 +57,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.swing.tree.TreeNode;
-import javax.xml.stream.XMLStreamException;
-
-import org.sbml.jsbml.CVTerm;
-import org.sbml.jsbml.CVTerm.Qualifier;
-import org.sbml.jsbml.Compartment;
-import org.sbml.jsbml.Model;
-import org.sbml.jsbml.Reaction;
-import org.sbml.jsbml.SBMLDocument;
-import org.sbml.jsbml.SBO;
-import org.sbml.jsbml.SBase;
-import org.sbml.jsbml.Species;
-import org.sbml.jsbml.ext.fbc.FBCConstants;
-import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
-import org.sbml.jsbml.ext.fbc.FBCSpeciesPlugin;
-import org.sbml.jsbml.ext.fbc.GeneProduct;
-import org.sbml.jsbml.ext.groups.Group;
-import org.sbml.jsbml.ext.groups.GroupsConstants;
-import org.sbml.jsbml.ext.groups.GroupsModelPlugin;
-import org.sbml.jsbml.util.Pair;
-
-import de.zbit.util.ResourceManager;
-import de.zbit.util.Utils;
-import de.zbit.util.progressbar.AbstractProgressBar;
-import de.zbit.util.progressbar.ProgressBar;
-import edu.ucsd.sbrg.db.AnnotateDB;
-import edu.ucsd.sbrg.db.BiGGDB;
-import edu.ucsd.sbrg.db.QueryOnce;
-import edu.ucsd.sbrg.miriam.Registry;
-import edu.ucsd.sbrg.util.GPRParser;
-import edu.ucsd.sbrg.util.SBMLUtils;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_METABOLITE;
+import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
+import static java.text.MessageFormat.format;
 
 /**
  * @author Thomas Zajac
@@ -79,8 +78,7 @@ public class BiGGAnnotation {
   /**
    * Localization support.
    */
-  private static final transient ResourceBundle baseBundle =
-    ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * Default model notes.
    */
@@ -94,32 +92,34 @@ public class BiGGAnnotation {
    */
   private String documentNotesFile = "SBMLDocumentNotes.html";
   /**
-   *
+   * Progressbar for the whole annotation process
    */
   private AbstractProgressBar progress;
   /**
-   *
+   * Variable tracking gene product count for progress bar, as it changes dynamically during processing
    */
   private int initialGeneProducts;
 
-  /**
-   */
   public BiGGAnnotation() {
   }
 
 
   /**
-   * @param doc
-   * @return
+   * Adds annotations from BiGG Knowledgebase for the model contained in the {@link SBMLDocument}
+   * 
+   * @param doc:
+   *        {@link SBMLDocument} to be annotated with data from BiGG Knowledgebase
+   * @return Annotated SBMLDocument
    */
   public SBMLDocument annotate(SBMLDocument doc) {
     if (!doc.isSetModel()) {
-      logger.info(baseBundle.getString("NO_MODEL_FOUND"));
+      logger.info(MESSAGES.getString("NO_MODEL_FOUND"));
       return doc;
     }
     Model model = doc.getModel();
     replacements = new HashMap<>();
-    // add fake count so it never reaches 100 before gene products are processed
+    // add fake count so it never reaches 100 before gene products are processed, as new gene products are added
+    // dynamically
     int count = model.getCompartmentCount() + model.getSpeciesCount() + model.getReactionCount() + 50;
     if (model.isSetPlugin(FBCConstants.shortLabel)) {
       FBCModelPlugin fbcModelPlug = (FBCModelPlugin) model.getPlugin(FBCConstants.shortLabel);
@@ -131,7 +131,7 @@ public class BiGGAnnotation {
     try {
       appendNotes(doc);
     } catch (IOException | XMLStreamException exc) {
-      logger.warning(baseBundle.getString("FAILED_WRITE_NOTES"));
+      logger.warning(MESSAGES.getString("FAILED_WRITE_NOTES"));
     }
     // Recursively sort and group all annotations in the SBMLDocument.
     mergeMIRIAMannotations(doc);
@@ -145,9 +145,12 @@ public class BiGGAnnotation {
   /**
    * Replaces generic placeholders in notes files and appends both note types
    *
-   * @param doc
-   * @throws IOException
-   * @throws XMLStreamException
+   * @param doc:
+   *        {@link SBMLDocument} to add notes to
+   * @throws IOException:
+   *         propagated from {@link SBMLDocument#appendNotes(String)} or {@link Model#appendNotes(String)}
+   * @throws XMLStreamException:
+   *         propagated from {@link SBMLDocument#appendNotes(String)} or {@link Model#appendNotes(String)}
    */
   private void appendNotes(SBMLDocument doc) throws IOException, XMLStreamException {
     if (replacements.containsKey("${title}") && (documentNotesFile != null)) {
@@ -163,7 +166,9 @@ public class BiGGAnnotation {
    * Recursively goes through all annotations in the given {@link SBase} and
    * alphabetically sort annotations after grouping them by {@link org.sbml.jsbml.CVTerm.Qualifier}.
    *
-   * @param sbase
+   * @param sbase:
+   *        {@link SBase} to start the merging process at, corresponding to an instance of {@link SBMLDocument} here,
+   *        though also used to pass current {@link SBase} during recursion
    */
   private void mergeMIRIAMannotations(SBase sbase) {
     if (sbase.isSetAnnotation()) {
@@ -172,7 +177,7 @@ public class BiGGAnnotation {
       if (doMerge) {
         sbase.getAnnotation().unsetCVTerms();
         for (Entry<Qualifier, SortedSet<String>> entry : miriam.entrySet()) {
-          logger.info(format(baseBundle.getString("MERGING_MIRIAM_RESOURCES"), entry.getKey(),
+          logger.info(format(MESSAGES.getString("MERGING_MIRIAM_RESOURCES"), entry.getKey(),
             sbase.getClass().getSimpleName(), sbase.getId()));
           sbase.addCVTerm(new CVTerm(entry.getKey(), entry.getValue().toArray(new String[0])));
         }
@@ -188,9 +193,13 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param sbase
-   * @param miriam
-   * @return
+   * @param sbase:
+   *        Current {@link SBase} to merge annotations for
+   * @param miriam:
+   *        Current annotations for the given {@link SBase}
+   * @return Returns {@code true}, if there are different {@link CVTerm} instances with the same qualifier that need to
+   *         be
+   *         merged
    */
   private boolean hashMIRIAMuris(SBase sbase, SortedMap<Qualifier, SortedSet<String>> miriam) {
     boolean doMerge = false;
@@ -202,12 +211,12 @@ public class BiGGAnnotation {
       } else {
         if (sbase instanceof Model) {
           if (!qualifier.isModelQualifier()) {
-            logger.info(format(baseBundle.getString("CORRECTING_INVALID_QUALIFIERS"),
+            logger.info(format(MESSAGES.getString("CORRECTING_INVALID_QUALIFIERS"),
               qualifier.getElementNameEquivalent(), sbase.getId()));
             qualifier = Qualifier.getModelQualifierFor(qualifier.getElementNameEquivalent());
           }
         } else if (!qualifier.isBiologicalQualifier()) {
-          logger.info(format(baseBundle.getString("CORRECTING_INVALID_MODEL_QUALIFIER"),
+          logger.info(format(MESSAGES.getString("CORRECTING_INVALID_MODEL_QUALIFIER"),
             qualifier.getElementNameEquivalent(), sbase.getClass().getSimpleName(), sbase.getId()));
           qualifier = Qualifier.getBiologicalQualifierFor(qualifier.getElementNameEquivalent());
         }
@@ -220,7 +229,11 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param model
+   * Process annotations pertaining to the actual {@link Model} and delegate annotation for all {@link Compartment},
+   * {@link Species}, {@link Reaction} and {@link GeneProduct} instances in the model
+   *
+   * @param model:
+   *        {@link Model} contained within {@link SBMLDocument} passed to {@link #annotate(SBMLDocument)}
    */
   private void annotate(Model model) {
     BiGGDB.getTaxonId(model.getId()).ifPresent(
@@ -241,13 +254,17 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param model
+   * Add annotation of genomic sequence/assembly to models contained in BiGG.
+   * Only MIRIAM annotations are added, if {@link Parameters#includeAnyURI()} returns {@code false}
+   *
+   * @param model:
+   *        {@link Model} contained within {@link SBMLDocument} passed to {@link #annotate(SBMLDocument)}
    */
   private void addBiGGModelAnnotations(Model model) {
     model.addCVTerm(new CVTerm(CVTerm.Qualifier.BQM_IS, Registry.createURI("bigg.model", model.getId())));
     String accession = BiGGDB.getGenomeAccesion(model.getId());
     Matcher refseqMatcher =
-      Pattern.compile("^(((AC|AP|NC|NG|NM|NP|NR|NT|NW|XM|XP|XR|YP|ZP)_\\d+)|(NZ\\_[A-Z]{2,4}\\d+))(\\.\\d+)?$")
+      Pattern.compile("^(((AC|AP|NC|NG|NM|NP|NR|NT|NW|XM|XP|XR|YP|ZP)_\\d+)|(NZ_[A-Z]{2,4}\\d+))(\\.\\d+)?$")
              .matcher(accession);
     CVTerm term = new CVTerm(Qualifier.BQB_IS_VERSION_OF);
     if (refseqMatcher.matches()) {
@@ -270,8 +287,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param model
-   * @param organism
+   * Replace placeholders in {@link Parameters#documentTitlePattern()} and ModelNotes
+   *
+   * @param model:
+   *        {@link Model} contained within {@link SBMLDocument} passed to {@link #annotate(SBMLDocument)}
+   * @param organism:
+   *        Organism name obtained from BiGG for {@link Model#getId()} using {@link BiGGDB#getOrganism(String)}
    */
   private void processReplacements(Model model, String organism) {
     Parameters parameters = Parameters.get();
@@ -291,11 +312,19 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param model
+   * Add publication annotation for given {@link Model}.
+   * Only works for models contained in BiGG
+   *
+   * @param model:
+   *        {@link Model} contained within {@link SBMLDocument} passed to {@link #annotate(SBMLDocument)}
    */
   private void annotatePublications(Model model) {
     progress.DisplayBar("Annotating Publications (1/5)  ");
-    List<Pair<String, String>> publications = BiGGDB.getPublications(model.getId());
+    String id = model.getId();
+    if (!QueryOnce.isModel(id)) {
+      return;
+    }
+    List<Pair<String, String>> publications = BiGGDB.getPublications(id);
     int numPublications;
     if ((numPublications = publications.size()) > 0) {
       String[] resources = new String[numPublications];
@@ -309,7 +338,10 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param model
+   * Delegates annotation processing for all compartments contained in the {@link Model}
+   *
+   * @param model:
+   *        {@link Model} contained within {@link SBMLDocument} passed to {@link #annotate(SBMLDocument)}
    */
   private void annotateListOfCompartments(Model model) {
     for (int i = 0; i < model.getCompartmentCount(); i++) {
@@ -320,7 +352,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param compartment
+   * Adds bigg and SBO annotation for the given compartment and sets its name from BiGG, if no name is set or if it is
+   * the default compartment.
+   * Only works for compartment codes contained in BiGG Knowledgebase
+   *
+   * @param compartment:
+   *        Current {@link Compartment} for which annotations are to be added
    */
   private void annotateCompartment(Compartment compartment) {
     BiGGId biggId = new BiGGId(compartment.getId());
@@ -335,7 +372,10 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param model
+   * Delegates annoation processing for all chemical species contained in the {@link Model}
+   *
+   * @param model:
+   *        {@link Model} contained within {@link SBMLDocument} passed to {@link #annotate(SBMLDocument)}
    */
   private void annotateListOfSpecies(Model model) {
     for (int i = 0; i < model.getSpeciesCount(); i++) {
@@ -346,7 +386,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param species
+   * Annotates given species with different information from BiGG Knowledgebase.
+   * Sets a name, if possible, if none is set the name corresponds to the species BiGGId.
+   * Adds chemical formula for the species.
+   *
+   * @param species:
+   *        Current {@link Species} for which annotations are to be added
    */
   private void annotateSpecies(Species species) {
     // This biggId corresponds to BiGGId calculated from getSpeciesBiGGIdFromUriList method, if not present as
@@ -361,8 +406,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param species
-   * @return
+   * Checks if {@link Species#getId()} returns a correct {@link BiGGId} and tries to retrieve a corresponding
+   * {@link BiGGId} based on annotations present.
+   *
+   * @param species:
+   *        Current {@link Species} for which the id should be checked
+   * @return String representation of {@link BiGGId}
    */
   private Optional<BiGGId> checkId(Species species) {
     // TODO: compartments are not handled correctly -- is this at all possible to get right?
@@ -380,12 +429,21 @@ public class BiGGAnnotation {
       // update id if we found something
       return getBiGGIdFromResources(resources, TYPE_SPECIES);
     });
+    // Create BiGGId from retrieved id or return BiGGId constructed for original id
     return id.map(BiGGId::createMetaboliteId).orElse(metaboliteId);
   }
 
 
   /**
-   * @param resources
+   * Tries to get a BiGG ID specification conform id from BiGG knowledgebase for a given {@link Species},
+   * {@link Reaction} or {@link GeneProduct} from the annotations present
+   *
+   * @param resources:
+   *        Annotations for the given object, should be a list of URIs
+   * @param type:
+   *        Either {@link BiGGDBContract.Constants#TYPE_SPECIES}, {@link BiGGDBContract.Constants#TYPE_REACTION} or
+   *        {@link BiGGDBContract.Constants#TYPE_GENE_PRODUCT}
+   * @return {@link Optional<String>} if an id could be retrieved, else {@link Optional#empty()}
    */
   private Optional<String> getBiGGIdFromResources(List<String> resources, String type) {
     for (String resource : resources) {
@@ -400,15 +458,21 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param parts
-   * @param type
-   * @return
+   * Tries to get id from BiGG Knowledgebase based on annotation prefix and id for specific species, reaction or gene
+   * product
+   *
+   * @param parts:
+   *        Parts retrieved from the identifiers.org URI - prefix and id
+   * @param type:
+   *        Either {@link BiGGDBContract.Constants#TYPE_SPECIES}, {@link BiGGDBContract.Constants#TYPE_REACTION} or
+   *        {@link BiGGDBContract.Constants#TYPE_GENE_PRODUCT}
+   * @return {@link Optional<String>} containing the id, if one could be retrieved, else {@link Optional#empty()}
    */
   private Optional<String> getBiggIdFromParts(List<String> parts, String type) {
-    String dataSource = parts.get(0);
+    String prefix = parts.get(0);
     String synonymId = parts.get(1);
-    if (QueryOnce.isDataSource(dataSource)) {
-      Optional<String> id = BiGGDB.getBiggIdFromSynonym(dataSource, synonymId, type);
+    if (QueryOnce.isDataSource(prefix)) {
+      Optional<String> id = BiGGDB.getBiggIdFromSynonym(prefix, synonymId, type);
       if (id.isPresent()) {
         return id;
       }
@@ -418,8 +482,13 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param species
-   * @param biggId
+   * Set species name from BiGG Knowledgebase if name is not yet set or corresponds to the species id.
+   * Depends on the presence of the BiGGId in BiGG
+   *
+   * @param species:
+   *        {@link Species} to check and set the name for
+   * @param biggId:
+   *        {@link BiGGId} constructed from the species id
    */
   private void setSpeciesName(Species species, BiGGId biggId) {
     if (!species.isSetName()
@@ -430,11 +499,18 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param species
-   * @param biggId
+   * Set SBO terms for species, depending on its component type, i.e. metabolite, protein or a generic material entity.
+   * Annotation for the last case is only written, if {@link Parameters#omitGenericTerms()} returns {@code false}.
+   * If no component type can be retrieved from BiGG, annotation with material entity can still be performed
+   *
+   * @param species:
+   *        {@link Species} to add the annotation for
+   * @param biggId:
+   *        {@link BiGGId} constructed from the species id
    */
   private void setSBOTermFromComponentType(Species species, BiGGId biggId) {
-    BiGGDB.getComponentType(biggId).ifPresent(type -> {
+    Parameters parameters = Parameters.get();
+    BiGGDB.getComponentType(biggId).ifPresentOrElse(type -> {
       switch (type) {
       case "metabolite":
         species.setSBOTerm(SBO.getSimpleMolecule());
@@ -443,19 +519,26 @@ public class BiGGAnnotation {
         species.setSBOTerm(SBO.getProtein());
         break;
       default:
-        Parameters parameters = Parameters.get();
-        if (parameters.omitGenericTerms()) {
+        if (!parameters.omitGenericTerms()) {
           species.setSBOTerm(SBO.getMaterialEntity());
         }
         break;
+      }
+    }, () -> {
+      if (!parameters.omitGenericTerms()) {
+        species.setSBOTerm(SBO.getMaterialEntity());
       }
     });
   }
 
 
   /**
-   * @param species
-   * @param biggId
+   * Add annotations for species based on {@link BiGGId}, update http to https for MIRIAM URIs and merge duplicates
+   *
+   * @param species:
+   *        {@link Species} to add annotations for
+   * @param biggId:
+   *        {@link BiGGId} from species id
    */
   private void setCVTermResources(Species species, BiGGId biggId) {
     // Set of annotations calculated from BiGGDB and AnnotateDB
@@ -482,7 +565,6 @@ public class BiGGAnnotation {
     annotations.addAll(linkOut);
     // using AnnotateDB
     if (parameters.addADBAnnotations() && AnnotateDB.inUse() && isBiGGMetabolite) {
-      // TODO: sabiork.reaction and strange IDs are returned, needs rework
       Set<String> adb_annotations = AnnotateDB.getAnnotations(BIGG_METABOLITE, biggId.toBiGGId());
       annotations.addAll(adb_annotations);
     }
@@ -508,8 +590,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param species
-   * @param biggId
+   * Tries to set chemical formula and charge for the given species
+   *
+   * @param species:
+   *        {@link Species} to add formula and charge for
+   * @param biggId:
+   *        {@link BiGGId} from species id
    */
   @SuppressWarnings("deprecation")
   private void FBCSetFormulaCharge(Species species, BiGGId biggId) {
@@ -550,7 +636,10 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param model
+   * Delegates annotation of reactions
+   *
+   * @param model:
+   *        {@link Model} contained within {@link SBMLDocument} passed to {@link #annotate(SBMLDocument)}
    */
   private void annotateListOfReactions(Model model) {
     for (int i = 0; i < model.getReactionCount(); i++) {
@@ -561,7 +650,11 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param reaction
+   * Adds annotations to a reaction, parses associated gene reaction rules and creates missing gene products and
+   * converts subsystem information into corresponding groups
+   *
+   * @param reaction:
+   *        {@link Reaction} to add annotion for
    */
   private void annotateReaction(Reaction reaction) {
     checkId(reaction).ifPresent(biggId -> {
@@ -592,8 +685,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param reaction
-   * @return
+   * Checks if {@link Species#getId()} returns a correct {@link BiGGId} and tries to retrieve a corresponding
+   * {@link BiGGId} based on annotations present.
+   *
+   * @param reaction:
+   *        Current {@link Reaction} for which the id should be checked
+   * @return String representation of {@link BiGGId}
    */
   private Optional<BiGGId> checkId(Reaction reaction) {
     String id = reaction.getId();
@@ -615,8 +712,13 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param reaction
-   * @param biggId
+   * Retrieve subsystem information from BiGG Knowledgebase and convert subsystem information to corresponding group
+   * using {@link GroupsModelPlugin} and link reaction to corresponding group
+   *
+   * @param reaction:
+   *        Current {@link Reaction} for which subsystems should be obtained
+   * @param biggId:
+   *        {@link BiGGId} from reaction id
    */
   private void parseSubsystems(Reaction reaction, BiGGId biggId) {
     Model model = reaction.getModel();
@@ -664,8 +766,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param reaction
-   * @param biggId
+   * Add annotations for reaction based on {@link BiGGId}, update http to https for MIRIAM URIs and merge duplicates
+   *
+   * @param reaction:
+   *        {@link Species} to add annotations for
+   * @param biggId:
+   *        {@link BiGGId} from reaction id
    */
   private void setCVTermResources(Reaction reaction, BiGGId biggId) {
     // Set of annotations calculated from BiGGDB and AnnotateDB
@@ -717,7 +823,10 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param model
+   * Delegates annotation of gene products
+   *
+   * @param model:
+   *        {@link Model} contained within {@link SBMLDocument} passed to {@link #annotate(SBMLDocument)}
    */
   private void annotateListOfGeneProducts(Model model) {
     if (model.isSetPlugin(FBCConstants.shortLabel)) {
@@ -739,7 +848,10 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param geneProduct
+   * Adds annotation for a gene product
+   *
+   * @param geneProduct:
+   *        {@link GeneProduct} that is to be annotated
    */
   private void annotateGeneProduct(GeneProduct geneProduct) {
     Optional<String> label = Optional.empty();
@@ -765,8 +877,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param geneProduct
-   * @return
+   * Checks if {@link GeneProduct#getId()} returns a correct {@link BiGGId} and tries to retrieve a corresponding
+   * {@link BiGGId} based on annotations present.
+   *
+   * @param geneProduct:
+   *        Current {@link GeneProduct} for which the id should be checked
+   * @return String representation of {@link BiGGId}
    */
   private Optional<BiGGId> checkId(GeneProduct geneProduct) {
     String id = geneProduct.getId();
@@ -786,8 +902,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param geneProduct
-   * @param biggId
+   * Add annotations for gene product based on {@link BiGGId}
+   *
+   * @param geneProduct:
+   *        {@link GeneProduct} to add annotations for
+   * @param biggId:
+   *        {@link BiGGId} from species id
    */
   private void setCVTermResources(GeneProduct geneProduct, BiGGId biggId) {
     CVTerm termIs = new CVTerm(Qualifier.BQB_IS);
@@ -816,7 +936,12 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param geneProduct
+   * Set gene product label and, if possible, update or set the gene product name to the one obtained from BiGG by use
+   * of the label, which was either already set or corresponds to a {@link BiGGId} created from
+   * {@link GeneProduct#getId()}
+   *
+   * @param geneProduct:
+   *        {@link GeneProduct} to add annotations for
    * @param label
    */
   private void setGPLabelName(GeneProduct geneProduct, String label) {
@@ -836,11 +961,13 @@ public class BiGGAnnotation {
 
 
   /**
-   * @param location
+   * @param location:
    *        relative path to the resource from this class.
-   * @param replacements
+   * @param replacements:
+   *        map of actual values for placeholder tokens in the notes
    * @return Constants.URL_PREFIX + " like '%%identifiers.org%%'"
-   * @throws IOException
+   * @throws IOException:
+   *         propagated from {@link FileInputStream()}
    */
   private String parseNotes(String location, Map<String, String> replacements) throws IOException {
     StringBuilder sb = new StringBuilder();

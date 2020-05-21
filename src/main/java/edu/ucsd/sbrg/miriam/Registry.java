@@ -1,7 +1,8 @@
 package edu.ucsd.sbrg.miriam;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-import static java.text.MessageFormat.format;
+import edu.ucsd.sbrg.bigg.BiGGId;
+import edu.ucsd.sbrg.miriam.models.Miriam;
+import org.sbml.jsbml.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,10 +15,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.sbml.jsbml.util.Pair;
-
-import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.models.Miriam;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
+import static java.text.MessageFormat.format;
 
 public class Registry {
 
@@ -111,7 +110,6 @@ public class Registry {
    * @return
    */
   private static String removeIdParts(String urlPattern) {
-    String url = urlPattern;
     for (String prefix : Arrays.asList("affymetrix", "BAO:", "EFO:", "FB:", "ecnumber:", "homologene:", "IDO:",
       "interaction_id:", "interpro:", "kisao:", "Locus:", "locusname:", "ncbigene:", "ndc:", "orphanet:", "RGD:",
       "sabioreactionid", "sgd:", "SGD:", "Taxon:", "taxonomy:", "WB:", "WP:", "ZFIN:")) {
