@@ -57,7 +57,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
 import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_METABOLITE;
 import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
@@ -616,7 +615,7 @@ public class BiGGAnnotation {
         try {
           fbcSpecPlug.setChemicalFormula(formula);
         } catch (IllegalArgumentException exc) {
-          logger.severe(format(mpMessageBundle.getString("CHEM_FORMULA_INVALID"), Utils.getMessage(exc)));
+          logger.severe(format(MESSAGES.getString("CHEM_FORMULA_INVALID"), Utils.getMessage(exc)));
         }
       });
     }
@@ -628,7 +627,7 @@ public class BiGGAnnotation {
     }
     if (species.isSetCharge()) {
       chargeFromBiGG.filter(charge -> charge != species.getCharge()).ifPresent(charge -> logger.warning(
-        format(mpMessageBundle.getString("CHARGE_CONTRADICTION"), charge, species.getCharge(), species.getId())));
+        format(MESSAGES.getString("CHARGE_CONTRADICTION"), charge, species.getCharge(), species.getId())));
       species.unsetCharge();
     }
     chargeFromBiGG.filter(charge -> charge != 0).ifPresent(fbcSpecPlug::setCharge);
@@ -951,9 +950,9 @@ public class BiGGAnnotation {
     }
     BiGGDB.getGeneName(label).ifPresent(geneName -> {
       if (geneName.isEmpty()) {
-        logger.fine(format(mpMessageBundle.getString("NO_GENE_FOR_LABEL"), geneProduct.getName()));
+        logger.fine(format(MESSAGES.getString("NO_GENE_FOR_LABEL"), geneProduct.getName()));
       } else if (geneProduct.isSetName() && !geneProduct.getName().equals(geneName)) {
-        logger.warning(format(mpMessageBundle.getString("UPDATE_GP_NAME"), geneProduct.getName(), geneName));
+        logger.warning(format(MESSAGES.getString("UPDATE_GP_NAME"), geneProduct.getName(), geneName));
       }
       geneProduct.setName(geneName);
     });

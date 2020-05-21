@@ -3,8 +3,49 @@
  */
 package edu.ucsd.sbrg.bigg;
 
-import static java.text.MessageFormat.format;
+import de.unirostock.sems.cbarchive.CombineArchive;
+import de.zbit.AppConf;
+import de.zbit.Launcher;
+import de.zbit.io.FileTools;
+import de.zbit.io.ZIPUtils;
+import de.zbit.io.filefilter.SBFileFilter;
+import de.zbit.util.ResourceManager;
+import de.zbit.util.Utils;
+import de.zbit.util.logging.LogOptions;
+import de.zbit.util.prefs.KeyProvider;
+import de.zbit.util.prefs.SBProperties;
+import edu.ucsd.sbrg.bigg.ModelPolisherOptions.Compression;
+import edu.ucsd.sbrg.db.ADBOptions;
+import edu.ucsd.sbrg.db.AnnotateDB;
+import edu.ucsd.sbrg.db.BiGGDB;
+import edu.ucsd.sbrg.db.BiGGDBOptions;
+import edu.ucsd.sbrg.db.DBConfig;
+import edu.ucsd.sbrg.parsers.COBRAparser;
+import edu.ucsd.sbrg.parsers.JSONparser;
+import edu.ucsd.sbrg.util.GPRParser;
+import edu.ucsd.sbrg.util.SBMLUtils;
+import edu.ucsd.sbrg.util.UpdateListener;
+import org.sbml.jsbml.Compartment;
+import org.sbml.jsbml.Reaction;
+import org.sbml.jsbml.SBMLDocument;
+import org.sbml.jsbml.SBMLError;
+import org.sbml.jsbml.SBMLErrorLog;
+import org.sbml.jsbml.SBMLReader;
+import org.sbml.jsbml.Species;
+import org.sbml.jsbml.TidySBMLWriter;
+import org.sbml.jsbml.ext.fbc.FBCConstants;
+import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
+import org.sbml.jsbml.ext.fbc.GeneProduct;
+import org.sbml.jsbml.ext.fbc.converters.CobraToFbcV2Converter;
+import org.sbml.jsbml.util.SBMLtools;
+import org.sbml.jsbml.util.ValuePair;
+import org.sbml.jsbml.validator.SBMLValidator;
+import org.sbml.jsbml.validator.offline.LoggingValidationContext;
+import org.sbml.jsbml.xml.XMLNode;
+import org.sbml.jsbml.xml.parsers.SBMLRDFAnnotationParser;
+import org.w3c.tidy.Tidy;
 
+import javax.xml.stream.XMLStreamException;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,50 +75,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import javax.xml.stream.XMLStreamException;
-
-import org.sbml.jsbml.Compartment;
-import org.sbml.jsbml.Reaction;
-import org.sbml.jsbml.SBMLDocument;
-import org.sbml.jsbml.SBMLError;
-import org.sbml.jsbml.SBMLErrorLog;
-import org.sbml.jsbml.SBMLReader;
-import org.sbml.jsbml.Species;
-import org.sbml.jsbml.TidySBMLWriter;
-import org.sbml.jsbml.ext.fbc.FBCConstants;
-import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
-import org.sbml.jsbml.ext.fbc.GeneProduct;
-import org.sbml.jsbml.ext.fbc.converters.CobraToFbcV2Converter;
-import org.sbml.jsbml.util.SBMLtools;
-import org.sbml.jsbml.util.ValuePair;
-import org.sbml.jsbml.validator.SBMLValidator;
-import org.sbml.jsbml.validator.offline.LoggingValidationContext;
-import org.sbml.jsbml.xml.XMLNode;
-import org.sbml.jsbml.xml.parsers.SBMLRDFAnnotationParser;
-import org.w3c.tidy.Tidy;
-
-import de.unirostock.sems.cbarchive.CombineArchive;
-import de.zbit.AppConf;
-import de.zbit.Launcher;
-import de.zbit.io.FileTools;
-import de.zbit.io.ZIPUtils;
-import de.zbit.io.filefilter.SBFileFilter;
-import de.zbit.util.ResourceManager;
-import de.zbit.util.Utils;
-import de.zbit.util.logging.LogOptions;
-import de.zbit.util.prefs.KeyProvider;
-import de.zbit.util.prefs.SBProperties;
-import edu.ucsd.sbrg.bigg.ModelPolisherOptions.Compression;
-import edu.ucsd.sbrg.db.ADBOptions;
-import edu.ucsd.sbrg.db.AnnotateDB;
-import edu.ucsd.sbrg.db.BiGGDB;
-import edu.ucsd.sbrg.db.BiGGDBOptions;
-import edu.ucsd.sbrg.db.DBConfig;
-import edu.ucsd.sbrg.parsers.COBRAparser;
-import edu.ucsd.sbrg.parsers.JSONparser;
-import edu.ucsd.sbrg.util.GPRParser;
-import edu.ucsd.sbrg.util.SBMLUtils;
-import edu.ucsd.sbrg.util.UpdateListener;
+import static java.text.MessageFormat.format;
 
 /**
  * @author Andreas Dr&auml;ger
@@ -99,7 +97,7 @@ public class ModelPolisher extends Launcher {
   /**
    * Bundle for ModelPolisher logger messages
    */
-  public static transient ResourceBundle mpMessageBundle = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  public static transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * A {@link Logger} for this class.
    */
@@ -195,7 +193,7 @@ public class ModelPolisher extends Launcher {
    */
   private void batchProcess(File input, File output) throws IOException, XMLStreamException {
     if (!input.exists()) {
-      throw new IOException(format(mpMessageBundle.getString("READ_FILE_ERROR"), input.toString()));
+      throw new IOException(format(MESSAGES.getString("READ_FILE_ERROR"), input.toString()));
     }
     // Create output directory if output is a directory or create output file's directory if output is a file
     checkCreateOutDir(output);
@@ -203,13 +201,13 @@ public class ModelPolisher extends Launcher {
       if (!output.isDirectory()) {
         // input == dir && output != dir -> should only happen if already inside a directory and trying to recurse,
         // which is not supported
-        logger.warning(format(mpMessageBundle.getString("WRITE_DIR_TO_FILE_ERROR"), input.getAbsolutePath(),
+        logger.warning(format(MESSAGES.getString("WRITE_DIR_TO_FILE_ERROR"), input.getAbsolutePath(),
           output.getAbsolutePath()));
         return;
       }
       File[] files = input.listFiles();
       if (files == null || files.length < 1) {
-        throw new IOException(mpMessageBundle.getString("NO_FILES_ERROR"));
+        throw new IOException(MESSAGES.getString("NO_FILES_ERROR"));
       }
       for (File file : files) {
         File target = getOutputFileName(file, output);
@@ -245,18 +243,18 @@ public class ModelPolisher extends Launcher {
    *        File denoting output location
    */
   private void checkCreateOutDir(File output) {
-    logger.info(format(mpMessageBundle.getString("OUTPUT_FILE_DESC"), isDirectory(output) ? "directory" : "file"));
+    logger.info(format(MESSAGES.getString("OUTPUT_FILE_DESC"), isDirectory(output) ? "directory" : "file"));
     /*
      * ModelPolisher.isDirectory() checks if output location contains ., if so it is assumed to be a file,
      * else it is assumed to be a directory
      */
     // output is directory
     if (isDirectory(output) && !output.exists()) {
-      logger.info(format(mpMessageBundle.getString("CREATING_DIRECTORY"), output.getAbsolutePath()));
+      logger.info(format(MESSAGES.getString("CREATING_DIRECTORY"), output.getAbsolutePath()));
       if (output.mkdirs()) {
-        logger.fine(format(mpMessageBundle.getString("DIRECTORY_CREATED"), output.getAbsolutePath()));
+        logger.fine(format(MESSAGES.getString("DIRECTORY_CREATED"), output.getAbsolutePath()));
       } else {
-        logger.severe(format(mpMessageBundle.getString("DIRECTORY_CREATION_FAILED"), output.getAbsolutePath()));
+        logger.severe(format(MESSAGES.getString("DIRECTORY_CREATION_FAILED"), output.getAbsolutePath()));
         exit();
       }
     }
@@ -264,12 +262,12 @@ public class ModelPolisher extends Launcher {
     else {
       // check if directory of outfile exist and create if required
       if (!output.getParentFile().exists()) {
-        logger.info(format(mpMessageBundle.getString("CREATING_DIRECTORY"), output.getParentFile().getAbsolutePath()));
+        logger.info(format(MESSAGES.getString("CREATING_DIRECTORY"), output.getParentFile().getAbsolutePath()));
         if (output.getParentFile().mkdirs()) {
-          logger.fine(format(mpMessageBundle.getString("DIRECTORY_CREATED"), output.getParentFile().getAbsolutePath()));
+          logger.fine(format(MESSAGES.getString("DIRECTORY_CREATED"), output.getParentFile().getAbsolutePath()));
         } else {
           logger.severe(
-            format(mpMessageBundle.getString("DIRECTORY_CREATION_FAILED"), output.getParentFile().getAbsolutePath()));
+            format(MESSAGES.getString("DIRECTORY_CREATION_FAILED"), output.getParentFile().getAbsolutePath()));
           exit();
         }
       }
@@ -346,7 +344,7 @@ public class ModelPolisher extends Launcher {
    */
   private void readAndPolish(File input, File output) throws XMLStreamException, IOException {
     long time = System.currentTimeMillis();
-    logger.info(format(mpMessageBundle.getString("READ_FILE_INFO"), input.getAbsolutePath()));
+    logger.info(format(MESSAGES.getString("READ_FILE_INFO"), input.getAbsolutePath()));
     SBMLDocument doc;
     // reading or parsing input
     if (fileType.equals(FileType.MAT_FILE)) {
@@ -358,7 +356,7 @@ public class ModelPolisher extends Launcher {
       doc = SBMLReader.read(input, new UpdateListener());
     }
     if (doc == null) {
-      logger.severe(format(mpMessageBundle.getString("ALL_DOCS_PARSE_ERROR"), input.toString()));
+      logger.severe(format(MESSAGES.getString("ALL_DOCS_PARSE_ERROR"), input.toString()));
       return;
     }
     polish(doc, output);
@@ -366,7 +364,7 @@ public class ModelPolisher extends Launcher {
     SBMLUtils.cleanGPRMap();
     GPRParser.clearAssociationMap();
     time = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - time);
-    logger.info(String.format(mpMessageBundle.getString("FINISHED_TIME"), (time / 60), (time % 60)));
+    logger.info(String.format(MESSAGES.getString("FINISHED_TIME"), (time / 60), (time % 60)));
   }
 
 
@@ -381,7 +379,7 @@ public class ModelPolisher extends Launcher {
     try {
       iStream = new FileInputStream(input);
     } catch (FileNotFoundException exc) {
-      logger.severe(format(mpMessageBundle.getString("READ_FILE_ERROR"), input.toPath()));
+      logger.severe(format(MESSAGES.getString("READ_FILE_ERROR"), input.toPath()));
     }
     // If it's null, something went horribly wrong and a nullPointerException should be thrown
     BufferedReader reader = new BufferedReader(new InputStreamReader(iStream));
@@ -395,7 +393,7 @@ public class ModelPolisher extends Launcher {
       reader.close();
       String doc = sb.toString();
       if (!doc.contains("<html ")) {
-        logger.fine(mpMessageBundle.getString("TAGS_FINE_INFO"));
+        logger.fine(MESSAGES.getString("TAGS_FINE_INFO"));
         return;
       }
       doc = doc.replaceAll("<html ", "<body ");
@@ -406,15 +404,15 @@ public class ModelPolisher extends Launcher {
         Files.copy(input.toPath(), output);
       } catch (IOException e) {
         // We assume it was already corrected
-        logger.info(mpMessageBundle.getString("SKIP_TAG_REPLACEMENT"));
+        logger.info(MESSAGES.getString("SKIP_TAG_REPLACEMENT"));
         return;
       }
       BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(input)));
       writer.write(doc);
-      logger.info(format(mpMessageBundle.getString("WROTE_CORRECT_HTML"), input.toPath()));
+      logger.info(format(MESSAGES.getString("WROTE_CORRECT_HTML"), input.toPath()));
       writer.close();
     } catch (IOException exc) {
-      logger.severe(mpMessageBundle.getString("READ_HTML_ERROR"));
+      logger.severe(MESSAGES.getString("READ_HTML_ERROR"));
     }
   }
 
@@ -436,7 +434,7 @@ public class ModelPolisher extends Launcher {
       doc = annotation.annotate(doc);
     }
     // writing polished model
-    logger.info(format(mpMessageBundle.getString("WRITE_FILE_INFO"), output.getAbsolutePath()));
+    logger.info(format(MESSAGES.getString("WRITE_FILE_INFO"), output.getAbsolutePath()));
     TidySBMLWriter.write(doc, output, getClass().getSimpleName(), getVersionNumber(), ' ', (short) 2);
     // produce COMBINE archive and delete output model and glossary
     if (parameters.outputCOMBINE()) {
@@ -447,7 +445,7 @@ public class ModelPolisher extends Launcher {
     if (parameters.compression() != Compression.NONE) {
       String fileExtension = parameters.compression().getFileExtension();
       String archive = output.getAbsolutePath() + "." + fileExtension;
-      logger.info(format(mpMessageBundle.getString("ARCHIVE"), archive));
+      logger.info(format(MESSAGES.getString("ARCHIVE"), archive));
       switch (parameters.compression()) {
       case ZIP:
         ZIPUtils.ZIPcompress(new String[] {output.getAbsolutePath()}, archive, "SBML Archive", true);
@@ -459,7 +457,7 @@ public class ModelPolisher extends Launcher {
         break;
       }
       if (!output.delete()) {
-        logger.warning(String.format("Failed to delete output file '%s' after compression.", output.getAbsolutePath()));
+        logger.warning(format("Failed to delete output file '{0}' after compression.", output.getAbsolutePath()));
       }
       if (parameters.SBMLValidation()) {
         validate(archive, false);
@@ -476,7 +474,7 @@ public class ModelPolisher extends Launcher {
    */
   private SBMLDocument checkLevelAndVersion(SBMLDocument doc) {
     if (!doc.isSetLevelAndVersion() || (doc.getLevelAndVersion().compareTo(ValuePair.of(3, 1)) < 0)) {
-      logger.info(mpMessageBundle.getString("TRY_CONV_LVL3_V1"));
+      logger.info(MESSAGES.getString("TRY_CONV_LVL3_V1"));
       SBMLtools.setLevelAndVersion(doc, 3, 1);
     }
     CobraToFbcV2Converter converter = new CobraToFbcV2Converter();
@@ -537,7 +535,7 @@ public class ModelPolisher extends Launcher {
     String glossary = getGlossary(doc);
     String glossaryLocation =
       output.getAbsolutePath().substring(0, output.getAbsolutePath().lastIndexOf('.')) + "_glossary.rdf";
-    logger.info(format(mpMessageBundle.getString("WRITE_RDF_FILE_INFO"), glossaryLocation));
+    logger.info(format(MESSAGES.getString("WRITE_RDF_FILE_INFO"), glossaryLocation));
     writeTidyRDF(new File(glossaryLocation), glossary);
   }
 
@@ -566,14 +564,14 @@ public class ModelPolisher extends Launcher {
       ca.addEntry(outputRDF, "glossary.rdf",
         // generated from https://sems.uni-rostock.de/trac/combine-ext/wiki/CombineFormatizer
         new URI("http://purl.org/NET/mediatypes/application/rdf+xml"), true);
-      logger.info(format(mpMessageBundle.getString("WRITE_RDF_FILE_INFO"), combineArcLocation));
+      logger.info(format(MESSAGES.getString("WRITE_RDF_FILE_INFO"), combineArcLocation));
       ca.pack();
       ca.close();
       // clean up original of packed files
       boolean rdfDeleted = outputRDF.delete();
       boolean outputXMLDeleted = outputXML.delete();
-      logger.info(format(mpMessageBundle.getString("DELETE_FILE"), outputXML.getParent(), outputXMLDeleted));
-      logger.info(format(mpMessageBundle.getString("DELETE_FILE"), outputRDF.getParent(), rdfDeleted));
+      logger.info(format(MESSAGES.getString("DELETE_FILE"), outputXML.getParent(), outputXMLDeleted));
+      logger.info(format(MESSAGES.getString("DELETE_FILE"), outputRDF.getParent(), rdfDeleted));
     } catch (Exception e) {
       logger.warning("Exception while producing COMBINE Archive:");
       e.printStackTrace();
@@ -665,7 +663,7 @@ public class ModelPolisher extends Launcher {
    */
   private void validate(String filename, boolean online) {
     if (online) {
-      logger.info(String.format("Validating '%s' using online validator.", filename));
+      logger.info(format("Validating '{0}' using online validator.", filename));
       String output = "xml";
       String offcheck = "p,u";
       Map<String, String> parameters = new HashMap<>();
@@ -675,7 +673,7 @@ public class ModelPolisher extends Launcher {
       SBMLErrorLog sbmlErrorLog = SBMLValidator.checkConsistency(filename, parameters);
       handleErrorLog(sbmlErrorLog, filename);
     } else {
-      logger.info(String.format("Validating '%s' using offline validator.", filename));
+      logger.info(format("Validating '{0}' using offline validator.", filename));
       SBMLDocument doc = null;
       try {
         InputStream istream;
@@ -695,7 +693,7 @@ public class ModelPolisher extends Launcher {
         SBMLErrorLog sbmlErrorLog = context.getErrorLog();
         handleErrorLog(sbmlErrorLog, filename);
       } else {
-        logger.severe(String.format("Failed reading file '%s' for offline validation.", filename));
+        logger.severe(format("Failed reading file '{0}' for offline validation.", filename));
       }
     }
   }
@@ -707,14 +705,14 @@ public class ModelPolisher extends Launcher {
    */
   private void handleErrorLog(SBMLErrorLog sbmlErrorLog, String filename) {
     if (sbmlErrorLog != null) {
-      logger.info(format(mpMessageBundle.getString("VAL_ERR_COUNT"), sbmlErrorLog.getErrorCount(), filename));
+      logger.info(format(MESSAGES.getString("VAL_ERR_COUNT"), sbmlErrorLog.getErrorCount(), filename));
       // printErrors
       for (int j = 0; j < sbmlErrorLog.getErrorCount(); j++) {
         SBMLError error = sbmlErrorLog.getError(j);
         logger.warning(error.toString());
       }
     } else {
-      logger.info(mpMessageBundle.getString("VAL_ERROR"));
+      logger.info(MESSAGES.getString("VAL_ERROR"));
     }
   }
 
@@ -726,9 +724,9 @@ public class ModelPolisher extends Launcher {
   @Override
   public String getCitation(boolean HTMLstyle) {
     if (HTMLstyle) {
-      return mpMessageBundle.getString("CITATION_HTML");
+      return MESSAGES.getString("CITATION_HTML");
     }
-    return mpMessageBundle.getString("CITATION");
+    return MESSAGES.getString("CITATION");
   }
 
 

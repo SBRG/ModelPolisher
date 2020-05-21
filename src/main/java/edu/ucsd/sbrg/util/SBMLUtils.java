@@ -3,17 +3,6 @@
  */
 package edu.ucsd.sbrg.util;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-
-import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import javax.swing.tree.TreeNode;
-
 import org.sbml.jsbml.ListOf;
 import org.sbml.jsbml.Reaction;
 import org.sbml.jsbml.ext.fbc.Association;
@@ -26,6 +15,16 @@ import org.sbml.jsbml.ext.fbc.ListOfObjectives;
 import org.sbml.jsbml.ext.fbc.LogicalOperator;
 import org.sbml.jsbml.ext.fbc.Objective;
 import org.sbml.jsbml.ext.groups.Member;
+
+import javax.swing.tree.TreeNode;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 
 /**
  * A collection of helpful functions for dealing with SBML data structures.
@@ -142,7 +141,7 @@ public class SBMLUtils {
   public static void setRequiredAttributes(Reaction r) {
     // TODO: make defaults user settings or take from L2V5.
     if (!r.isSetId()) {
-      logger.severe(MessageFormat.format(mpMessageBundle.getString("ID_MISSING_FOR_TYPE"), r.getElementName()));
+      logger.severe(MessageFormat.format(MESSAGES.getString("ID_MISSING_FOR_TYPE"), r.getElementName()));
     }
     if (!r.isSetFast()) {
       r.setFast(false);

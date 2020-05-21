@@ -1,10 +1,12 @@
 package edu.ucsd.sbrg.parsers.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import static java.text.MessageFormat.format;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Metabolite {
@@ -61,8 +63,8 @@ public class Metabolite {
     if (validCompartmentCode.matcher(compartment).find()) {
       this.compartment = compartment;
     } else {
-      logger.finest(String.format(
-        "Compartment code '%s' in metabolite '%s' did not match pattern [a-z]{1,2}, trying to extract from id after parsing",
+      logger.finest(format(
+        "Compartment code '{0}' in metabolite '{1}' did not match pattern [a-z]{1,2}, trying to extract from id after parsing",
         compartment, id));
     }
   }

@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.text.MessageFormat.format;
+
 /**
  * This class stores the information from BiGG identifiers and provides methods
  * to access all components of the identifier.
@@ -321,7 +323,7 @@ public class BiGGId {
     } else if (compartmentMatcher.matches()) {
       setAbbreviation(id);
     } else {
-      logger.warning(String.format("Cannot convert to BiGGId, setting as abbreviation: %s", id));
+      logger.warning(format("Cannot convert to BiGGId, setting as abbreviation: {0}", id));
       setAbbreviation(id);
     }
   }

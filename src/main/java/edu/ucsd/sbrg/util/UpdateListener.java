@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 
 /**
  * This class keeps track of changes to the model and tries to keep cross
@@ -86,7 +86,7 @@ public class UpdateListener implements TreeNodeChangeListener {
           }
         } else {
           logger.severe(
-            MessageFormat.format(mpMessageBundle.getString("ID_CHANGE_WARNING"), nsb.getElementName(), oldId, newId));
+            MessageFormat.format(MESSAGES.getString("ID_CHANGE_WARNING"), nsb.getElementName(), oldId, newId));
         }
       }
     }

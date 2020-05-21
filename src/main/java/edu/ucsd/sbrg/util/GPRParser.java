@@ -1,17 +1,7 @@
 package edu.ucsd.sbrg.util;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-
-import java.io.StringReader;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
-
+import de.zbit.util.Utils;
+import edu.ucsd.sbrg.bigg.BiGGId;
 import org.sbml.jsbml.ASTNode;
 import org.sbml.jsbml.Annotation;
 import org.sbml.jsbml.Model;
@@ -29,8 +19,17 @@ import org.sbml.jsbml.ext.fbc.Or;
 import org.sbml.jsbml.text.parser.CobraFormulaParser;
 import org.sbml.jsbml.xml.XMLNode;
 
-import de.zbit.util.Utils;
-import edu.ucsd.sbrg.bigg.BiGGId;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
+import static java.text.MessageFormat.format;
 
 public class GPRParser {
 
@@ -66,7 +65,7 @@ public class GPRParser {
             r.getId(), r.getModel(), omitGenericTerms);
       } catch (Throwable exc) {
         logger.warning(
-          MessageFormat.format(mpMessageBundle.getString("PARSE_GPR_ERROR"), geneReactionRule, Utils.getMessage(exc)));
+          format(MESSAGES.getString("PARSE_GPR_ERROR"), geneReactionRule, Utils.getMessage(exc)));
       }
       if (association != null) {
         parseGPR(r, association, omitGenericTerms);
@@ -137,12 +136,12 @@ public class GPRParser {
           gp = (GeneProduct) model.findUniqueNamedSBase(id);
         }
         if (gp == null) {
-          logger.warning(MessageFormat.format(mpMessageBundle.getString("CREATE_MISSING_GPR"), id, reactionId));
+          logger.warning(format(MESSAGES.getString("CREATE_MISSING_GPR"), id, reactionId));
           FBCModelPlugin fbcPlug = (FBCModelPlugin) model.getPlugin(FBCConstants.shortLabel);
           gp = fbcPlug.createGeneProduct(id);
           gp.setLabel(id);
         } else {
-          logger.info(MessageFormat.format(mpMessageBundle.getString("UPDATE_GP_ID"), gp.getId(), id));
+          logger.info(format(MESSAGES.getString("UPDATE_GP_ID"), gp.getId(), id));
           gp.setId(id);
         }
       }
@@ -229,7 +228,7 @@ public class GPRParser {
           String geneProduct = ((GeneProductRef) current).getGeneProduct();
           if (gprs.contains(geneProduct)) {
             if (!or.removeAssociation(current)) {
-              logger.warning(String.format("Failed to unset duplicate GeneProductReference '%s' for reaction '%s'",
+              logger.warning(format("Failed to unset duplicate GeneProductReference '{0}' for reaction '{1}'",
                 geneProduct, r.getId()));
             }
           } else {
@@ -334,12 +333,12 @@ public class GPRParser {
           if (!model.containsUniqueNamedSBase(id)) {
             GeneProduct gp = (GeneProduct) model.findUniqueNamedSBase(id);
             if (gp == null) {
-              logger.warning(String.format("Creating missing gene product %s", id));
+              logger.warning(format("Creating missing gene product {0}", id));
               FBCModelPlugin fbcPlug = (FBCModelPlugin) model.getPlugin(FBCConstants.shortLabel);
               gp = fbcPlug.createGeneProduct(id);
               gp.setLabel(id);
             } else {
-              logger.info(MessageFormat.format(mpMessageBundle.getString("UPDATE_GP_ID"), gp.getId(), id));
+              logger.info(format(MESSAGES.getString("UPDATE_GP_ID"), gp.getId(), id));
               gp.setId(id);
             }
           }

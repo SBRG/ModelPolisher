@@ -3,7 +3,7 @@
  */
 package edu.ucsd.sbrg.util;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +32,6 @@ import de.zbit.io.ZIPUtils;
 import de.zbit.io.filefilter.SBFileFilter;
 import de.zbit.util.Utils;
 import de.zbit.util.logging.LogUtil;
-import edu.ucsd.sbrg.bigg.ModelPolisher;
 import edu.ucsd.sbrg.bigg.SBMLPolisher;
 
 /**
@@ -73,7 +72,7 @@ public class SBMLFix {
    */
   public static void batchProcess(File input, File output) {
     if (!output.exists() && !output.isFile() && !(input.isFile() && input.getName().equals(output.getName()))) {
-      logger.info(MessageFormat.format(mpMessageBundle.getString("DIRECTORY_CREATED"), output.getAbsolutePath()));
+      logger.info(MessageFormat.format(MESSAGES.getString("DIRECTORY_CREATED"), output.getAbsolutePath()));
       output.mkdir();
     }
     if (input.isFile()) {
@@ -90,7 +89,7 @@ public class SBMLFix {
       }
     } else {
       if (!output.isDirectory()) {
-        logger.severe(MessageFormat.format(mpMessageBundle.getString("WRITE_TO_FILE_ERROR"), output.getAbsolutePath()));
+        logger.severe(MessageFormat.format(MESSAGES.getString("WRITE_TO_FILE_ERROR"), output.getAbsolutePath()));
       }
       for (File file : input.listFiles()) {
         File target = new File(Utils.ensureSlash(output.getAbsolutePath()) + file.getName());
@@ -110,7 +109,7 @@ public class SBMLFix {
     if ((gPlug != null) && gPlug.isSetListOfGroups()) {
       for (Group group : gPlug.getListOfGroups()) {
         if (!group.isSetKind()) {
-          logger.info(MessageFormat.format(mpMessageBundle.getString("ADD_KIND_TO_GROUP"),
+          logger.info(MessageFormat.format(MESSAGES.getString("ADD_KIND_TO_GROUP"),
             group.isSetName() ? group.getName() : group.getId()));
           group.setKind(Group.Kind.partonomy);
         }
@@ -161,11 +160,11 @@ public class SBMLFix {
     double[] fluxCoefficients, String[] fluxObjectives) {
     Objective activeObjective = null;
     if (!fbcPlug.isSetActiveObjective()) {
-      logger.severe(MessageFormat.format(mpMessageBundle.getString("OBJ_NOT_DEFINED"), modelDescriptor));
+      logger.severe(MessageFormat.format(MESSAGES.getString("OBJ_NOT_DEFINED"), modelDescriptor));
       if (fbcPlug.getObjectiveCount() == 1) {
         activeObjective = fbcPlug.getObjective(0);
         fbcPlug.setActiveObjective(activeObjective);
-        logger.info(MessageFormat.format(mpMessageBundle.getString("OBJ_SOLUTION"), activeObjective.getId()));
+        logger.info(MessageFormat.format(MESSAGES.getString("OBJ_SOLUTION"), activeObjective.getId()));
       }
     } else {
       activeObjective =
@@ -173,7 +172,7 @@ public class SBMLFix {
     }
     if (activeObjective != null) {
       if (!activeObjective.isSetListOfFluxObjectives()) {
-        logger.severe(MessageFormat.format(mpMessageBundle.getString("TRY_GUESS_MISSING_FLUX_OBJ"), modelDescriptor));
+        logger.severe(MessageFormat.format(MESSAGES.getString("TRY_GUESS_MISSING_FLUX_OBJ"), modelDescriptor));
         if (listOfReactions != null) {
           if (fluxObjectives != null) {
             /*
@@ -193,7 +192,7 @@ public class SBMLFix {
                 strict = true;
               } else {
                 logger.severe(
-                  MessageFormat.format(mpMessageBundle.getString("REACTION_UNKNOWN_ERROR"), id, modelDescriptor));
+                  MessageFormat.format(MESSAGES.getString("REACTION_UNKNOWN_ERROR"), id, modelDescriptor));
               }
             }
             return strict;
@@ -210,11 +209,11 @@ public class SBMLFix {
               createFluxObjective(modelDescriptor, rBiomass, fluxCoefficients, activeObjective, 0);
               return true;
             } else {
-              logger.severe(mpMessageBundle.getString("REACTION_BIOMASS_UNKNOWN_ERROR"));
+              logger.severe(MESSAGES.getString("REACTION_BIOMASS_UNKNOWN_ERROR"));
             }
           }
         } else {
-          logger.severe(MessageFormat.format(mpMessageBundle.getString("REACTION_LIST_MISSING"), modelDescriptor));
+          logger.severe(MessageFormat.format(MESSAGES.getString("REACTION_LIST_MISSING"), modelDescriptor));
         }
       }
     }
@@ -235,7 +234,7 @@ public class SBMLFix {
     if ((fluxCoefficients != null) && (fluxCoefficients.length > i)) {
       coeff = fluxCoefficients[i];
     }
-    logger.info(MessageFormat.format(mpMessageBundle.getString("ADDED_FLUX_OBJ"), r.getId(), coeff, modelDescriptor));
+    logger.info(MessageFormat.format(MESSAGES.getString("ADDED_FLUX_OBJ"), r.getId(), coeff, modelDescriptor));
     o.createFluxObjective(null, null, coeff, r);
   }
 
@@ -248,12 +247,12 @@ public class SBMLFix {
    */
   public static void fixSBML(File in, File out) throws XMLStreamException, IOException {
     long time = System.currentTimeMillis();
-    logger.info(MessageFormat.format(mpMessageBundle.getString("READ_FILE_INFO"), in.getAbsolutePath()));
+    logger.info(MessageFormat.format(MESSAGES.getString("READ_FILE_INFO"), in.getAbsolutePath()));
     SBMLDocument doc = SBMLReader.read(in);
     Model model = doc.getModel();
     fixGroups(model);
     fixObjective(in.getAbsolutePath(), model);
-    logger.info(MessageFormat.format(mpMessageBundle.getString("WRITE_FILE_INFO"), out.getAbsolutePath()));
+    logger.info(MessageFormat.format(MESSAGES.getString("WRITE_FILE_INFO"), out.getAbsolutePath()));
     TidySBMLWriter.write(doc, out, ModelPolisher.class.getName(), "1.1", ' ', (short) 2);
     String archive = out.getAbsolutePath() + ".gz";
     logger.info(MessageFormat.format("ARCHIVE", archive));

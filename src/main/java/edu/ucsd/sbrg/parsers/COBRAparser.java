@@ -1,6 +1,6 @@
 package edu.ucsd.sbrg.parsers;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 import static java.text.MessageFormat.format;
 import static org.sbml.jsbml.util.Pair.pairOf;
 
@@ -148,7 +148,7 @@ public class COBRAparser {
       }
     }
     if (content.keySet().size() > 1) {
-      logger.warning(format(mpMessageBundle.getString("MORE_MODELS_COBRA_FILE"), content.keySet().size()));
+      logger.warning(format(MESSAGES.getString("MORE_MODELS_COBRA_FILE"), content.keySet().size()));
     }
     return nameModel;
   }
@@ -209,7 +209,7 @@ public class COBRAparser {
   private void checkModelField(Struct correctedStruct, String structName, Array field, String fieldName) {
     boolean invalidField = false;
     try {
-      logger.finest(format(mpMessageBundle.getString("FOUND_COMPO"), ModelField.valueOf(fieldName)));
+      logger.finest(format(MESSAGES.getString("FOUND_COMPO"), ModelField.valueOf(fieldName)));
     } catch (IllegalArgumentException exc) {
       logException(exc);
       invalidField = true;
@@ -221,17 +221,17 @@ public class COBRAparser {
           String variantLC = variant.name().toLowerCase();
           if (variantLC.equals(fieldName.toLowerCase()) || variantLC.startsWith(fieldName.toLowerCase())) {
             if (MatlabFields.getStructField(correctedStruct, variant.name()) != null) {
-              logger.warning(format(mpMessageBundle.getString("FIELD_ALREADY_PRESENT"), variant.name(), fieldName));
+              logger.warning(format(MESSAGES.getString("FIELD_ALREADY_PRESENT"), variant.name(), fieldName));
               break;
             }
             correctedStruct.set(variant.name(), field);
-            logger.warning(format(mpMessageBundle.getString("CHANGED_TO_VARIANT"), fieldName, variant.name()));
+            logger.warning(format(MESSAGES.getString("CHANGED_TO_VARIANT"), fieldName, variant.name()));
             invalidField = false;
             break;
           }
         }
         if (invalidField) {
-          logger.warning(format(mpMessageBundle.getString("CORRECT_VARIANT_FAILED"), fieldName));
+          logger.warning(format(MESSAGES.getString("CORRECT_VARIANT_FAILED"), fieldName));
         }
       } else {
         correctedStruct.set(fieldName, field);
@@ -273,7 +273,7 @@ public class COBRAparser {
    */
   private void parseDescription(Model model) {
     if (mlField.description == null) {
-      logger.warning(format(mpMessageBundle.getString("FIELD_MISSING"), ModelField.description));
+      logger.warning(format(MESSAGES.getString("FIELD_MISSING"), ModelField.description));
       return;
     }
     if (mlField.description.getType() == MatlabType.Character) {
@@ -282,7 +282,7 @@ public class COBRAparser {
         model.setName(description.getRow(0));
       } else {
         logger.warning(
-          format(mpMessageBundle.getString("MANY_IDS_IN_DESC"), ((Char) mlField.description).asCharSequence()));
+          format(MESSAGES.getString("MANY_IDS_IN_DESC"), ((Char) mlField.description).asCharSequence()));
       }
     } else if (mlField.description.getType() == MatlabType.Structure) {
       mlField.setDescriptionFields();
@@ -368,7 +368,7 @@ public class COBRAparser {
         double charge = mlField.metCharge.getDouble(i);
         specPlug.setCharge((int) charge);
         if (charge - ((int) charge) != 0d) {
-          logger.warning(format(mpMessageBundle.getString("CHARGE_TO_INT_COBRA"), charge, specPlug.getCharge()));
+          logger.warning(format(MESSAGES.getString("CHARGE_TO_INT_COBRA"), charge, specPlug.getCharge()));
         }
       }
     }
@@ -462,10 +462,10 @@ public class COBRAparser {
           String finalId = id;
           success = Registry.checkResourceUrl(resource).map(res -> {
             term.addResource(res);
-            logger.finest(format(mpMessageBundle.getString("ADDED_URI_COBRA"), res));
+            logger.finest(format(MESSAGES.getString("ADDED_URI_COBRA"), res));
             return true;
           }).orElseGet(() -> {
-            logger.severe(format(mpMessageBundle.getString("ADD_URI_FAILED_COBRA"), collection, finalId));
+            logger.severe(format(MESSAGES.getString("ADD_URI_FAILED_COBRA"), collection, finalId));
             return false;
           });
         }
@@ -524,7 +524,7 @@ public class COBRAparser {
     if (id.endsWith(";")) {
       id = id.substring(0, id.length() - 1);
     } else if (id.contains(";")) {
-      logger.warning(mpMessageBundle.getString("TRUNCATED_ID") + id);
+      logger.warning(MESSAGES.getString("TRUNCATED_ID") + id);
       id = id.substring(0, id.indexOf(";"));
     }
     return id;
@@ -550,10 +550,10 @@ public class COBRAparser {
     if (!pattern.equals("")) {
       validId = Registry.checkPattern(id, pattern);
       if (!validId) {
-        logger.warning(format(mpMessageBundle.getString("PATTERN_MISMATCH"), id, pattern));
+        logger.warning(format(MESSAGES.getString("PATTERN_MISMATCH"), id, pattern));
       }
     } else {
-      logger.severe(format(mpMessageBundle.getString("COLLECTION_UNKNOWN"), prefix));
+      logger.severe(format(MESSAGES.getString("COLLECTION_UNKNOWN"), prefix));
     }
     return validId;
   }
@@ -590,7 +590,7 @@ public class COBRAparser {
    */
   private void parseGenes(ModelBuilder builder) {
     if (mlField.genes == null) {
-      logger.info(mpMessageBundle.getString("GENES_MISSING"));
+      logger.info(MESSAGES.getString("GENES_MISSING"));
       return;
     }
     Model model = builder.getModel();
@@ -705,7 +705,7 @@ public class COBRAparser {
             }
           });
         } catch (IllegalArgumentException exc) {
-          logger.warning(format(mpMessageBundle.getString("REACT_PARTIC_INVALID"), Utils.getMessage(exc)));
+          logger.warning(format(MESSAGES.getString("REACT_PARTIC_INVALID"), Utils.getMessage(exc)));
         }
       }
     }
@@ -737,11 +737,11 @@ public class COBRAparser {
       Array cell = mlField.confidenceScores.get(index);
       if (cell instanceof Matrix) {
         if (cell.getNumElements() == 0) {
-          logger.warning(mpMessageBundle.getString("CONF_CELL_WRONG_DIMS"));
+          logger.warning(MESSAGES.getString("CONF_CELL_WRONG_DIMS"));
           return;
         }
         double score = ((Matrix) cell).getDouble(0);
-        logger.fine(format(mpMessageBundle.getString("DISPLAY_CONF_SCORE"), score, reaction.getId()));
+        logger.fine(format(MESSAGES.getString("DISPLAY_CONF_SCORE"), score, reaction.getId()));
         builder.buildParameter("P_confidenceScore_of_" + SBMLtools.toSId(rId), // id
           format("Confidence score of reaction {0}", reaction.isSetName() ? reaction.getName() : reaction.getId()), // name
           score, // value
@@ -751,7 +751,7 @@ public class COBRAparser {
         // TODO: there should be a specific term for confidence scores.
         // Use "613 - reaction parameter" for now.
       } else {
-        logger.warning(format(mpMessageBundle.getString("TYPE_MISMATCH_MLDOUBLE"), cell.getClass().getSimpleName()));
+        logger.warning(format(MESSAGES.getString("TYPE_MISMATCH_MLDOUBLE"), cell.getClass().getSimpleName()));
       }
     }
     if (exists(mlField.citations, index)) {
@@ -781,7 +781,7 @@ public class COBRAparser {
       }
     }
     if (!match) {
-      logger.warning(format(mpMessageBundle.getString("EC_CODES_UNKNOWN"), ec));
+      logger.warning(format(MESSAGES.getString("EC_CODES_UNKNOWN"), ec));
     }
     if ((term.getResourceCount() > 0) && (term.getParent() == null)) {
       reaction.addCVTerm(term);
@@ -944,10 +944,10 @@ public class COBRAparser {
       if (validId(prefix, r)) {
         if (!resource.isEmpty()) {
           if (st.countTokens() > 1) {
-            logger.warning(format(mpMessageBundle.getString("SKIP_COMMENT"), resource, r, prefix));
+            logger.warning(format(MESSAGES.getString("SKIP_COMMENT"), resource, r, prefix));
           }
           resource = Registry.createURI(prefix, r);
-          logger.finest(format(mpMessageBundle.getString("ADDED_URI"), resource));
+          logger.finest(format(MESSAGES.getString("ADDED_URI"), resource));
           return term.addResource(resource);
         }
       }
@@ -963,7 +963,7 @@ public class COBRAparser {
     for (int i = 0; (mlField.grRules != null) && (i < mlField.grRules.getNumElements()); i++) {
       String geneReactionRule = toString(mlField.grRules.get(i), ModelField.grRules.name(), i + 1);
       if (model.getReaction(i) == null) {
-        logger.severe(format(mpMessageBundle.getString("CREATE_GPR_FAILED"), i));
+        logger.severe(format(MESSAGES.getString("CREATE_GPR_FAILED"), i));
       } else {
         GPRParser.parseGPR(model.getReaction(i), geneReactionRule, omitGenericTerms);
       }
@@ -993,7 +993,7 @@ public class COBRAparser {
       if (model.getReaction(i) != null) {
         SBMLUtils.createSubsystemLink(model.getReaction(i), group.createMember());
       } else {
-        logger.severe(format(mpMessageBundle.getString("SUBSYS_LINK_ERROR"), i));
+        logger.severe(format(MESSAGES.getString("SUBSYS_LINK_ERROR"), i));
       }
     }
   }
@@ -1011,7 +1011,7 @@ public class COBRAparser {
         char c = mlField.csense.getChar(i, 0);
         // TODO: only 'E' (equality) is supported for now!
         if (c != 'E' && model.getListOfSpecies().size() > i) {
-          logger.severe(format(mpMessageBundle.getString("NEQ_RELATION_UNSUPPORTED"), model.getSpecies(i).getId()));
+          logger.severe(format(MESSAGES.getString("NEQ_RELATION_UNSUPPORTED"), model.getSpecies(i).getId()));
         }
       } catch (Exception e) {
         logger.info(e.toString());
@@ -1049,7 +1049,7 @@ public class COBRAparser {
       double bVal = mlField.b.getDouble(i);
       if (bVal != 0d && model.getListOfSpecies().size() > i) {
         // TODO: this should be incorporated into FBC version 3.
-        logger.warning(format(mpMessageBundle.getString("B_VALUE_UNSUPPORTED"), bVal, model.getSpecies(i).getId()));
+        logger.warning(format(MESSAGES.getString("B_VALUE_UNSUPPORTED"), bVal, model.getSpecies(i).getId()));
       }
     }
   }
@@ -1071,7 +1071,7 @@ public class COBRAparser {
     if (array.getType() == MatlabType.Character) {
       Char string = (Char) array;
       if (string.getDimensions()[0] > 1) {
-        logger.fine(format(mpMessageBundle.getString("MANY_STRINGS_IN_CELL"), string.asCharSequence()));
+        logger.fine(format(MESSAGES.getString("MANY_STRINGS_IN_CELL"), string.asCharSequence()));
       }
       for (int i = 0; i < string.getDimensions()[0]; i++) {
         if (i > 0) {
@@ -1080,7 +1080,7 @@ public class COBRAparser {
         sb.append(string.getRow(i));
       }
     } else if (!Arrays.equals(array.getDimensions(), new int[] {0, 0})) {
-      logger.warning(format(mpMessageBundle.getString("TYPE_MISMATCH_STRING"), array.getType().toString(),
+      logger.warning(format(MESSAGES.getString("TYPE_MISMATCH_STRING"), array.getType().toString(),
         "parentName = %s", parentName, "parentIndex = %s", parentIndex));
     }
     return sb.toString();

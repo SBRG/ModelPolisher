@@ -14,17 +14,14 @@
  */
 package edu.ucsd.sbrg.bigg;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-import static java.text.MessageFormat.format;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.function.Predicate;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-
+import de.zbit.kegg.AtomBalanceCheck;
+import de.zbit.kegg.AtomBalanceCheck.AtomCheckResult;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
+import edu.ucsd.sbrg.miriam.Registry;
+import edu.ucsd.sbrg.util.GPRParser;
+import edu.ucsd.sbrg.util.SBMLFix;
+import edu.ucsd.sbrg.util.SBMLUtils;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.Compartment;
 import org.sbml.jsbml.InitialAssignment;
@@ -53,14 +50,16 @@ import org.sbml.jsbml.util.ModelBuilder;
 import org.sbml.jsbml.util.ResourceManager;
 import org.sbml.jsbml.xml.XMLNode;
 
-import de.zbit.kegg.AtomBalanceCheck;
-import de.zbit.kegg.AtomBalanceCheck.AtomCheckResult;
-import de.zbit.util.progressbar.AbstractProgressBar;
-import de.zbit.util.progressbar.ProgressBar;
-import edu.ucsd.sbrg.miriam.Registry;
-import edu.ucsd.sbrg.util.GPRParser;
-import edu.ucsd.sbrg.util.SBMLFix;
-import edu.ucsd.sbrg.util.SBMLUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.function.Predicate;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
+import static java.text.MessageFormat.format;
 
 /**
  * @author Andreas Dr&auml;ger
@@ -147,7 +146,7 @@ public class SBMLPolisher {
    */
   public SBMLDocument polish(SBMLDocument doc) {
     if (!doc.isSetModel()) {
-      logger.severe(mpMessageBundle.getString("NO_MODEL_FOUND"));
+      logger.severe(MESSAGES.getString("NO_MODEL_FOUND"));
       return doc;
     }
     Model model = doc.getModel();
@@ -167,7 +166,7 @@ public class SBMLPolisher {
    *        SBML Model to polish
    */
   public void polish(Model model) {
-    logger.info(format(mpMessageBundle.getString("PROCESSING_MODEL"), model.getId()));
+    logger.info(format(MESSAGES.getString("PROCESSING_MODEL"), model.getId()));
     // initialize ProgressBar
     int count = 1 // for model properties
       + model.getUnitDefinitionCount() + model.getCompartmentCount() + model.getParameterCount()
@@ -272,7 +271,7 @@ public class SBMLPolisher {
     UnitDefinition mmol_per_gDW_per_hr = model.getUnitDefinition("mmol_per_gDW_per_hr");
     if (mmol_per_gDW_per_hr == null) {
       mmol_per_gDW_per_hr = model.createUnitDefinition("mmol_per_gDW_per_hr");
-      logger.finest(mpMessageBundle.getString("ADDED_UNIT_DEF"));
+      logger.finest(MESSAGES.getString("ADDED_UNIT_DEF"));
     }
     if (mmol_per_gDW_per_hr.getUnitCount() < 1) {
       ModelBuilder.buildUnit(mmol_per_gDW_per_hr, 1d, -3, Unit.Kind.MOLE, 1d);
@@ -335,7 +334,7 @@ public class SBMLPolisher {
     } else {
       // remove C_ prefix of compartment code, not in BiGGId specification
       BiGGId.extractCompartmentCode(c.getId()).ifPresentOrElse(c::setId,
-        () -> logger.warning(String.format("CompartmentCode '%s' is not BiGGId conform.", c.getId())));
+        () -> logger.warning(format("CompartmentCode '{0}' is not BiGGId conform.", c.getId())));
     }
     c.setSBOTerm(410); // implicit compartment
     if (!c.isSetName()) {
@@ -389,8 +388,8 @@ public class SBMLPolisher {
     if (id.isEmpty()) {
       // remove species with missing id, produces invalid SBML
       if (species.isSetName()) {
-        logger.severe(String.format(
-          "Removing species '%s' due to missing id. Check your Model for entries missing the id attribute or duplicates.",
+        logger.severe(format(
+          "Removing species '{0}' due to missing id. Check your Model for entries missing the id attribute or duplicates.",
           species.getName()));
       } else {
         logger.severe("Removing species with missing id and name. Check your Model for species without id and name.");
@@ -398,12 +397,12 @@ public class SBMLPolisher {
       return Optional.of(species);
     }
     if (species.getId().endsWith("_boundary")) {
-      logger.warning(format(mpMessageBundle.getString("SPECIES_ID_INVALID"), id));
+      logger.warning(format(MESSAGES.getString("SPECIES_ID_INVALID"), id));
       id = id.substring(0, id.length() - 9);
       boolean uniqueId = species.getModel().findUniqueNamedSBase(id) == null;
       if (uniqueId) {
         if (!species.isSetBoundaryCondition() || !species.isBoundaryCondition()) {
-          logger.warning(format(mpMessageBundle.getString("BOUNDARY_FLAG_MISSING"), id));
+          logger.warning(format(MESSAGES.getString("BOUNDARY_FLAG_MISSING"), id));
           species.setBoundaryCondition(true);
         }
       }
@@ -426,8 +425,8 @@ public class SBMLPolisher {
     BiGGId.createMetaboliteId(id).ifPresent(biggId -> {
       if (biggId.isSetCompartmentCode() && species.isSetCompartment()
         && !biggId.getCompartmentCode().equals(species.getCompartment())) {
-        logger.warning(format(mpMessageBundle.getString("CHANGE_COMPART_REFERENCE"), species.getId(),
-          species.getCompartment(), biggId.getCompartmentCode()));
+        logger.warning(format(MESSAGES.getString("CHANGE_COMPART_REFERENCE"), species.getId(), species.getCompartment(),
+          biggId.getCompartmentCode()));
         species.setCompartment(biggId.getCompartmentCode());
       }
     });
@@ -464,8 +463,7 @@ public class SBMLPolisher {
         Compartment c = (Compartment) candidate;
         polish(c);
       } else if (candidate == null) {
-        logger.warning(
-          format(mpMessageBundle.getString("CREATE_MISSING_COMP"), cId, nsb.getId(), nsb.getElementName()));
+        logger.warning(format(MESSAGES.getString("CREATE_MISSING_COMP"), cId, nsb.getId(), nsb.getElementName()));
         polish(model.createCompartment(cId));
       }
     }
@@ -496,8 +494,8 @@ public class SBMLPolisher {
     if (id.isEmpty()) {
       // remove species with missing id, produces invalid SBML
       if (r.isSetName()) {
-        logger.severe(String.format(
-          "Removing reaction '%s' due to missing id. Check your Model for entries missing the id attribute or duplicates.",
+        logger.severe(format(
+          "Removing reaction '{0}' due to missing id. Check your Model for entries missing the id attribute or duplicates.",
           r.getName()));
       } else {
         logger.severe("Removing reaction with missing id and name. Check your Model for reaction without id and name.");
@@ -591,7 +589,7 @@ public class SBMLPolisher {
           compartmentId = species.getCompartment();
         }
       } else {
-        logger.info(format(mpMessageBundle.getString("SPECIES_REFERENCE_INVALID"), sr.getSpecies()));
+        logger.info(format(MESSAGES.getString("SPECIES_REFERENCE_INVALID"), sr.getSpecies()));
       }
     }
     if ((compartmentId == null) || compartmentId.isEmpty()) {
@@ -649,11 +647,11 @@ public class SBMLPolisher {
       // production, demand, exchange or ATP maintenance.
       AtomCheckResult<Reaction> defects = AtomBalanceCheck.checkAtomBalance(r, 1);
       if ((defects != null) && (defects.hasDefects())) {
-        logger.warning(format(mpMessageBundle.getString("ATOMS_MISSING"), r.getId(), defects.getDefects().toString()));
+        logger.warning(format(MESSAGES.getString("ATOMS_MISSING"), r.getId(), defects.getDefects().toString()));
       } else if (defects == null) {
-        logger.fine(format(mpMessageBundle.getString("CHECK_ATOM_BALANCE_FAILED"), r.getId()));
+        logger.fine(format(MESSAGES.getString("CHECK_ATOM_BALANCE_FAILED"), r.getId()));
       } else {
-        logger.fine(format(mpMessageBundle.getString("ATOMS_OK"), r.getId()));
+        logger.fine(format(MESSAGES.getString("ATOMS_OK"), r.getId()));
       }
     }
     GPRParser.convertAssociationsToFBCV2(r, omitGenericTerms);
@@ -767,10 +765,10 @@ public class SBMLPolisher {
       strict = checkBound(lb) && lb.getValue() < Double.POSITIVE_INFINITY && checkBound(ub)
         && ub.getValue() > Double.NEGATIVE_INFINITY && lb.getValue() <= ub.getValue();
       if (!strict) {
-        logger.warning(format(mpMessageBundle.getString("FLUX_BOUND_ERROR"), r.getId()));
+        logger.warning(format(MESSAGES.getString("FLUX_BOUND_ERROR"), r.getId()));
       }
     } else {
-      logger.warning(format(mpMessageBundle.getString("FLUX_BOUNDS_MISSING"), r.getId()));
+      logger.warning(format(MESSAGES.getString("FLUX_BOUNDS_MISSING"), r.getId()));
     }
     return strict;
   }
@@ -859,13 +857,13 @@ public class SBMLPolisher {
     if (strict && r.isSetListOfReactants()) {
       strict = checkSpeciesReferences(r.getListOfReactants());
       if (!strict) {
-        logger.warning(format(mpMessageBundle.getString("ILLEGAL_STOICH_REACT"), r.getId()));
+        logger.warning(format(MESSAGES.getString("ILLEGAL_STOICH_REACT"), r.getId()));
       }
     }
     if (strict && r.isSetListOfProducts()) {
       strict = checkSpeciesReferences(r.getListOfProducts());
       if (!strict) {
-        logger.warning(format(mpMessageBundle.getString("ILLEGAL_STOICH_PROD"), r.getId()));
+        logger.warning(format(MESSAGES.getString("ILLEGAL_STOICH_PROD"), r.getId()));
       }
     }
     return strict;
@@ -900,7 +898,7 @@ public class SBMLPolisher {
         if (variable instanceof Parameter) {
           if (variable.isSetSBOTerm() && SBO.isChildOf(variable.getSBOTerm(), 625)) {
             strict = false;
-            logger.warning(format(mpMessageBundle.getString("FLUX_BOUND_STRICT_CHANGE"), variable.getId()));
+            logger.warning(format(MESSAGES.getString("FLUX_BOUND_STRICT_CHANGE"), variable.getId()));
           }
         } else if (variable instanceof SpeciesReference) {
           strict = false;
@@ -919,7 +917,7 @@ public class SBMLPolisher {
   public boolean polishListOfObjectives(boolean strict, FBCModelPlugin modelPlug) {
     if (modelPlug.getObjectiveCount() == 0) {
       // Note: the strict attribute does not require the presence of any Objectives in the model.
-      logger.warning(format(mpMessageBundle.getString("OBJ_MISSING"), modelPlug.getParent().getId()));
+      logger.warning(format(MESSAGES.getString("OBJ_MISSING"), modelPlug.getParent().getId()));
     } else {
       for (Objective objective : modelPlug.getListOfObjectives()) {
         progress.DisplayBar("Polishing Objectives (7/9)  "); // "Processing objective " + objective.getId());
@@ -948,15 +946,15 @@ public class SBMLPolisher {
   public boolean polishListOfFluxObjectives(boolean strict, Objective objective) {
     if (objective.getFluxObjectiveCount() == 0) {
       // Note: the strict attribute does not require the presence of any flux objectives.
-      logger.warning(format(mpMessageBundle.getString("OBJ_FLUX_OBJ_MISSING"), objective.getId()));
+      logger.warning(format(MESSAGES.getString("OBJ_FLUX_OBJ_MISSING"), objective.getId()));
     } else {
       if (objective.getFluxObjectiveCount() > 1) {
-        logger.warning(format(mpMessageBundle.getString("TOO_MUCH_OBJ_TARGETS"), objective.getId()));
+        logger.warning(format(MESSAGES.getString("TOO_MUCH_OBJ_TARGETS"), objective.getId()));
       }
       for (FluxObjective fluxObjective : objective.getListOfFluxObjectives()) {
         if (!fluxObjective.isSetCoefficient() || Double.isNaN(fluxObjective.getCoefficient())
           || !Double.isFinite(fluxObjective.getCoefficient())) {
-          logger.warning(format(mpMessageBundle.getString("FLUX_OBJ_COEFF_INVALID"), fluxObjective.getReaction()));
+          logger.warning(format(MESSAGES.getString("FLUX_OBJ_COEFF_INVALID"), fluxObjective.getReaction()));
         }
       }
     }
@@ -1047,7 +1045,7 @@ public class SBMLPolisher {
     }
     newName = newName.replace("_", " ");
     if (!newName.equals(name)) {
-      logger.fine(format(mpMessageBundle.getString("CHANGED_NAME"), name, newName));
+      logger.fine(format(MESSAGES.getString("CHANGED_NAME"), name, newName));
     }
     return newName;
   }

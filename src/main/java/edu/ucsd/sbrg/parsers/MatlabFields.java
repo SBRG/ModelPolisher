@@ -1,10 +1,5 @@
 package edu.ucsd.sbrg.parsers;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-import static java.text.MessageFormat.format;
-
-import java.util.logging.Logger;
-
 import us.hebi.matlab.mat.types.Array;
 import us.hebi.matlab.mat.types.Cell;
 import us.hebi.matlab.mat.types.Char;
@@ -12,6 +7,11 @@ import us.hebi.matlab.mat.types.MatlabType;
 import us.hebi.matlab.mat.types.Matrix;
 import us.hebi.matlab.mat.types.Sparse;
 import us.hebi.matlab.mat.types.Struct;
+
+import java.util.logging.Logger;
+
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
+import static java.text.MessageFormat.format;
 
 /**
  *
@@ -151,7 +151,7 @@ class MatlabFields {
     try {
       return struct.get(fieldName);
     } catch (Exception e) {
-      logger.info(format(mpMessageBundle.getString("STRUCT_FIELD_NOT_PRESENT"), fieldName, e.toString()));
+      logger.info(format(MESSAGES.getString("STRUCT_FIELD_NOT_PRESENT"), fieldName, e.toString()));
       return null;
     }
   }
@@ -166,7 +166,7 @@ class MatlabFields {
       if (array.getType() == MatlabType.Cell) {
         return (Cell) array;
       }
-      logger.warning(format(mpMessageBundle.getString("TYPE_MISMATCH_CELL"), array.getType().toString(), arrayName));
+      logger.warning(format(MESSAGES.getString("TYPE_MISMATCH_CELL"), array.getType().toString(), arrayName));
     }
     return null;
   }
@@ -181,7 +181,7 @@ class MatlabFields {
       if (array.getType() == MatlabType.Character) {
         return (Char) array;
       }
-      logger.warning(format(mpMessageBundle.getString("TYPE_MISMATCH_CHAR"), array.getType().toString(), arrayName));
+      logger.warning(format(MESSAGES.getString("TYPE_MISMATCH_CHAR"), array.getType().toString(), arrayName));
     }
     return null;
   }
@@ -196,7 +196,7 @@ class MatlabFields {
       if (array.getType() == MatlabType.Double) {
         return (Matrix) array;
       }
-      logger.warning(format(mpMessageBundle.getString("TYPE_MISMATCH_DOUBLE"), array.getType().toString(), arrayName));
+      logger.warning(format(MESSAGES.getString("TYPE_MISMATCH_DOUBLE"), array.getType().toString(), arrayName));
     }
     return null;
   }
@@ -222,7 +222,7 @@ class MatlabFields {
     if (array.getType() == MatlabType.Sparse) {
       return (Sparse) array;
     }
-    logger.warning(format(mpMessageBundle.getString("TYPE_MISMATCH_S_ARRAY"), array.getType().toString(), arrayName));
+    logger.warning(format(MESSAGES.getString("TYPE_MISMATCH_S_ARRAY"), array.getType().toString(), arrayName));
     return null;
   }
 }

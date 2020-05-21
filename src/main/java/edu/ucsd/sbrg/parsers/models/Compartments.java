@@ -1,14 +1,16 @@
 package edu.ucsd.sbrg.parsers.models;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSetter;
+import static java.text.MessageFormat.format;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Compartments {
@@ -25,7 +27,7 @@ public class Compartments {
     if (validCompartmentCode.matcher(key).find()) {
       compartments.put(key, value);
     } else {
-      logger.warning(String.format("Compartment code '%s' did not match required pattern [a-z]{1,2}", key));
+      logger.warning(format("Compartment code '{0}' did not match required pattern [a-z]{1,2}", key));
     }
   }
 

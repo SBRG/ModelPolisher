@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 import static java.text.MessageFormat.format;
 
 public class Registry {
@@ -95,7 +95,7 @@ public class Registry {
         }
         first = Pattern.quote(first);
         second = Pattern.quote(second);
-        String matcherPattern = String.format("%s%s%s", first, patternCaptureGroup, second);
+        String matcherPattern = format("{0}{1}{2}", first, patternCaptureGroup, second);
         ALTERNATIVE_URL_PATTERNS.put(matcherPattern, collectionName);
         COLLECTION_FOR_URI.put(createProviderURI(provider), collectionName);
       }
@@ -251,7 +251,7 @@ public class Registry {
     if (!COLLECTION_FOR_PREFIX.containsKey(provider) && PREFIX_FOR_COLLECTION.containsKey(provider)) {
       provider = PREFIX_FOR_COLLECTION.get(provider);
     } else if (!COLLECTION_FOR_PREFIX.containsKey(provider)) {
-      logger.severe(format(mpMessageBundle.getString("UNCAUGHT_URI"), resource));
+      logger.severe(format(MESSAGES.getString("UNCAUGHT_URI"), resource));
       return Optional.of(resource);
     }
     String collection = COLLECTION_FOR_PREFIX.get(provider);
@@ -260,11 +260,11 @@ public class Registry {
     resource = createURI(provider, identifier);
     String report_resource = resource;
     if (!correct) {
-      logger.info(format(mpMessageBundle.getString("PATTERN_MISMATCH_INFO"), identifier, regexp, collection));
+      logger.info(format(MESSAGES.getString("PATTERN_MISMATCH_INFO"), identifier, regexp, collection));
       resource = fixResource(resource, identifier);
     }
     if (resource == null) {
-      logger.warning(format(mpMessageBundle.getString("CORRECTION_FAILED_DROP"), report_resource, collection));
+      logger.warning(format(MESSAGES.getString("CORRECTION_FAILED_DROP"), report_resource, collection));
       return Optional.empty();
     } else {
       logger.fine(format("Added resource {0}", resource));
@@ -329,24 +329,24 @@ public class Registry {
       resource = fixGO(resource, identifier);
     } else if (resource.contains("hmdb") && identifier.startsWith("/")) {
       resource = replace(resource, identifier, identifier.substring(1));
-      logger.severe(String.format("Changed identifier '%s' to '%s'", identifier, identifier.substring(1)));
+      logger.severe(format("Changed identifier '{0}' to '{1}'", identifier, identifier.substring(1)));
     } else if (resource.contains("kegg")) {
       // We can correct the kegg collection
       resource = fixKEGGCollection(resource, identifier);
     } else if (resource.contains("reactome")) {
       String resource_old = resource;
       resource = fixReactome(resource, identifier);
-      logger.info(format(mpMessageBundle.getString("CHANGED_REACTOME"), resource_old, resource));
+      logger.info(format(MESSAGES.getString("CHANGED_REACTOME"), resource_old, resource));
     } else if (resource.contains("refseq") && resource.contains("WP_")) {
       resource = replace(resource, "refseq", "ncbiprotein");
-      logger.info(String.format(
-        "Ids starting with 'WP_' seem to belong to 'ncbiprotein', not 'refseq'. Changed accordingly for '%s'",
+      logger.info(format(
+        "Ids starting with 'WP_' seem to belong to 'ncbiprotein', not 'refseq'. Changed accordingly for '{0}'",
         resource));
     } else if (resource.contains("rhea") && resource.contains("#")) {
       // remove last part, it's invalid either way, even though it gets resolved due to misinterpretation as non
       // existing anchor
       resource = resource.split("#")[0];
-      logger.info(format(mpMessageBundle.getString("CHANGED_RHEA"), resource));
+      logger.info(format(MESSAGES.getString("CHANGED_RHEA"), resource));
     } else {
       resource = null;
     }
@@ -361,7 +361,7 @@ public class Registry {
    */
   private static String fixChEBI(String resource, String identifier) {
     if (Pattern.compile("\\d+").matcher(identifier).matches()) {
-      logger.info(mpMessageBundle.getString("ADD_PREFIX_CHEBI"));
+      logger.info(MESSAGES.getString("ADD_PREFIX_CHEBI"));
       resource = replace(resource, identifier, "CHEBI:" + identifier);
     }
     return resource;
@@ -387,7 +387,7 @@ public class Registry {
   private static String fixECCode(String resource, String identifier) {
     int missingDots = identifier.length() - identifier.replace(".", "").length();
     if (missingDots < 1) {
-      logger.warning(format(mpMessageBundle.getString("EC_CHANGE_FAILED"), identifier));
+      logger.warning(format(MESSAGES.getString("EC_CHANGE_FAILED"), identifier));
       return null;
     }
     return replace(resource, identifier, identifier + ".-".repeat(Math.max(0, 3 - missingDots)));
@@ -401,7 +401,7 @@ public class Registry {
    */
   private static String fixGO(String resource, String identifier) {
     if (!identifier.toLowerCase().startsWith("go:")) {
-      logger.info(mpMessageBundle.getString("ADD_PREFIX_GO"));
+      logger.info(MESSAGES.getString("ADD_PREFIX_GO"));
       return replace(resource, identifier, "GO:" + identifier);
     }
     return resource;
@@ -415,10 +415,10 @@ public class Registry {
    */
   private static String fixKEGGCollection(String resource, String identifier) {
     if (identifier.startsWith("D")) {
-      logger.info(mpMessageBundle.getString("CHANGE_KEGG_DRUG"));
+      logger.info(MESSAGES.getString("CHANGE_KEGG_DRUG"));
       resource = replace(resource, "kegg.compound", "kegg.drug");
     } else if (identifier.startsWith("G")) {
-      logger.info(mpMessageBundle.getString("CHANGE_KEGG_GLYCAN"));
+      logger.info(MESSAGES.getString("CHANGE_KEGG_GLYCAN"));
       resource = replace(resource, "kegg.compound", "kegg.glycan");
     }
     return resource;

@@ -1,24 +1,17 @@
 package edu.ucsd.sbrg.parsers;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
-import static java.text.MessageFormat.format;
-import static org.sbml.jsbml.util.Pair.pairOf;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import javax.xml.stream.XMLStreamException;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.zbit.sbml.util.SBMLtools;
+import edu.ucsd.sbrg.bigg.BiGGId;
+import edu.ucsd.sbrg.miriam.Registry;
+import edu.ucsd.sbrg.parsers.models.Compartments;
+import edu.ucsd.sbrg.parsers.models.Gene;
+import edu.ucsd.sbrg.parsers.models.Metabolite;
+import edu.ucsd.sbrg.parsers.models.Reaction;
+import edu.ucsd.sbrg.parsers.models.Root;
+import edu.ucsd.sbrg.util.GPRParser;
+import edu.ucsd.sbrg.util.SBMLUtils;
+import edu.ucsd.sbrg.util.UpdateListener;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.Compartment;
 import org.sbml.jsbml.Model;
@@ -39,19 +32,23 @@ import org.sbml.jsbml.ext.groups.GroupsConstants;
 import org.sbml.jsbml.ext.groups.GroupsModelPlugin;
 import org.sbml.jsbml.util.ModelBuilder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.xml.stream.XMLStreamException;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-import de.zbit.sbml.util.SBMLtools;
-import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.Registry;
-import edu.ucsd.sbrg.parsers.models.Compartments;
-import edu.ucsd.sbrg.parsers.models.Gene;
-import edu.ucsd.sbrg.parsers.models.Metabolite;
-import edu.ucsd.sbrg.parsers.models.Reaction;
-import edu.ucsd.sbrg.parsers.models.Root;
-import edu.ucsd.sbrg.util.GPRParser;
-import edu.ucsd.sbrg.util.SBMLUtils;
-import edu.ucsd.sbrg.util.UpdateListener;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
+import static java.text.MessageFormat.format;
+import static org.sbml.jsbml.util.Pair.pairOf;
 
 /**
  * @author Thomas Jakob Zajac
@@ -120,7 +117,7 @@ public class JSONparser {
    * @return
    */
   private void parseModel(ModelBuilder builder, Root root) {
-    logger.info(mpMessageBundle.getString("JSON_PARSER_STARTED"));
+    logger.info(MESSAGES.getString("JSON_PARSER_STARTED"));
     // get Model and set all informational fields
     Model model = builder.getModel();
     model.setVersion(root.getVersion());
@@ -157,8 +154,8 @@ public class JSONparser {
         annotations.addAll(parseAnnotation(entry));
       }
     } else {
-      logger.severe(String.format("Please open an issue to see annotation format '%s' implemented.",
-        annotation.getClass().getName()));
+      logger.severe(
+        format("Please open an issue to see annotation format '{0}' implemented.", annotation.getClass().getName()));
     }
     if (annotations.size() > 0) {
       CVTerm term = new CVTerm();
@@ -187,7 +184,7 @@ public class JSONparser {
       }
     } else {
       logger.severe(
-        String.format("Please open an issue to see parsing for id format '%s' implemented.", ids.getClass().getName()));
+        format("Please open an issue to see parsing for id format '{0}' implemented.", ids.getClass().getName()));
     }
     return annotations;
   }
@@ -242,8 +239,7 @@ public class JSONparser {
         e.printStackTrace();
       }
     } else {
-      logger.severe(
-        String.format("Please open an issue to see notes format '%s' implemented.", notes.getClass().getName()));
+      logger.severe(format("Please open an issue to see notes format '{0}' implemented.", notes.getClass().getName()));
     }
   }
 
@@ -264,7 +260,7 @@ public class JSONparser {
       ((List<String>) value).forEach(items::add);
       note = key + ":" + items.toString();
     } else {
-      logger.severe(String.format("Please open an issue to see parsing for notes content format '%s' implemented.",
+      logger.severe(format("Please open an issue to see parsing for notes content format '{0}' implemented.",
         value.getClass().getName()));
     }
     return note;
@@ -277,7 +273,7 @@ public class JSONparser {
    */
   public void parseCompartments(ModelBuilder builder, Map<String, String> compartments) {
     int compSize = compartments.size();
-    logger.info(format(mpMessageBundle.getString("NUM_COMPART"), compSize));
+    logger.info(format(MESSAGES.getString("NUM_COMPART"), compSize));
     Model model = builder.getModel();
     for (Map.Entry<String, String> compartment : compartments.entrySet()) {
       BiGGId.extractCompartmentCode(compartment.getKey()).ifPresentOrElse(compartmentCode -> {
@@ -286,7 +282,7 @@ public class JSONparser {
           comp.setId(compartmentCode);
           comp.setName(compartment.getValue());
         }
-      }, () -> logger.info(String.format("Invalid compartment code '%s', skipping.", compartment.getKey())));
+      }, () -> logger.info(format("Invalid compartment code '{0}', skipping.", compartment.getKey())));
     }
   }
 
@@ -297,13 +293,13 @@ public class JSONparser {
    */
   private void parseMetabolites(ModelBuilder builder, List<Metabolite> metabolites) {
     int metSize = metabolites.size();
-    logger.info(format(mpMessageBundle.getString("NUM_METABOLITES"), metSize));
+    logger.info(format(MESSAGES.getString("NUM_METABOLITES"), metSize));
     Model model = builder.getModel();
     for (Metabolite metabolite : metabolites) {
       String id = metabolite.getId();
       BiGGId.createMetaboliteId(id).ifPresent(metId -> {
         if (model.getSpecies(metId.toBiGGId()) != null) {
-          logger.warning(String.format("Skipping duplicate species with id: '%s'", id));
+          logger.warning(format("Skipping duplicate species with id: '{0}'", id));
         } else {
           parseMetabolite(model, metabolite, metId);
         }
@@ -333,7 +329,7 @@ public class JSONparser {
         validFormula = true;
       } catch (IllegalArgumentException exc) {
         logger.warning(
-          String.format("Invalid formula for metabolite '%s' : %s. Setting in notes", biggId.toBiGGId(), formula));
+          format("Invalid formula for metabolite '{0}' : {1}. Setting in notes", biggId.toBiGGId(), formula));
       }
     }
     specPlug.setCharge(charge);
@@ -364,14 +360,14 @@ public class JSONparser {
    */
   private void parseGenes(ModelBuilder builder, List<Gene> genes) {
     int genSize = genes.size();
-    logger.info(format(mpMessageBundle.getString("NUM_GENES"), genSize));
+    logger.info(format(MESSAGES.getString("NUM_GENES"), genSize));
     Model model = builder.getModel();
     for (Gene gene : genes) {
       String id = gene.getId();
       BiGGId.createGeneId(id).ifPresent(geneId -> {
         FBCModelPlugin modelPlug = (FBCModelPlugin) model.getPlugin(FBCConstants.shortLabel);
         if (modelPlug.getGeneProduct(geneId.toBiGGId()) != null) {
-          logger.warning(String.format("Skipping duplicate gene with id: '%s'", id));
+          logger.warning(format("Skipping duplicate gene with id: '{0}'", id));
         } else {
           parseGene(model, gene, geneId.toBiGGId());
         }
@@ -404,13 +400,13 @@ public class JSONparser {
    */
   private void parseReactions(ModelBuilder builder, List<Reaction> reactions) {
     int reactSize = reactions.size();
-    logger.info(format(mpMessageBundle.getString("NUM_REACTIONS"), reactSize));
+    logger.info(format(MESSAGES.getString("NUM_REACTIONS"), reactSize));
     for (Reaction reaction : reactions) {
       String id = reaction.getId();
       // Add prefix for BiGGId
       BiGGId.createReactionId(id).ifPresent(reactionId -> {
         if (builder.getModel().getReaction(reactionId.toBiGGId()) != null) {
-          logger.warning(String.format("Skipping duplicate reaction with id: '%s'", id));
+          logger.warning(format("Skipping duplicate reaction with id: '{0}'", id));
         } else {
           parseReaction(builder, reaction, reactionId.toBiGGId());
         }
@@ -481,7 +477,7 @@ public class JSONparser {
           Species species = model.getSpecies(metId.toBiGGId());
           if (species == null) {
             species = model.createSpecies(metId.toBiGGId());
-            logger.info(format(mpMessageBundle.getString("SPECIES_UNDEFINED"), metId, r.getId()));
+            logger.info(format(MESSAGES.getString("SPECIES_UNDEFINED"), metId, r.getId()));
           }
           if (value < 0d) {
             ModelBuilder.buildReactants(r, pairOf(-value, species));

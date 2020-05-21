@@ -35,7 +35,7 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.mpMessageBundle;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ACCESSION_VALUE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.BIGG_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.CHARGE;
@@ -374,10 +374,10 @@ public class BiGGDB {
         if (collection != null && identifier != null) {
           resource = collection.replaceAll("http://", "https://") + identifier;
         } else if (collection == null) {
-          logger.fine(mpMessageBundle.getString("COLLECTION_NULL_GENE"));
+          logger.fine(MESSAGES.getString("COLLECTION_NULL_GENE"));
           continue;
         } else {
-          logger.warning(format(mpMessageBundle.getString("IDENTIFIER_NULL_GENE"), collection));
+          logger.warning(format(MESSAGES.getString("IDENTIFIER_NULL_GENE"), collection));
           continue;
         }
         Registry.checkResourceUrl(resource).map(results::add);
@@ -559,7 +559,7 @@ public class BiGGDB {
       pStatement.close();
       connection.close();
     } catch (SQLException exc) {
-      logger.warning(format(mpMessageBundle.getString("GET_TAXON_ERROR"), abbreviation, Utils.getMessage(exc)));
+      logger.warning(format(MESSAGES.getString("GET_TAXON_ERROR"), abbreviation, Utils.getMessage(exc)));
     }
     return result == null ? Optional.empty() : Optional.of(result);
   }
