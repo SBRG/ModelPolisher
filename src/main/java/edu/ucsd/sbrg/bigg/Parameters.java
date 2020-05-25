@@ -1,9 +1,9 @@
 package edu.ucsd.sbrg.bigg;
 
-import java.io.File;
-
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBProperties;
+
+import java.io.File;
 
 /**
  * Helper class to store all parameters for running ModelPolisher in batch
@@ -11,7 +11,7 @@ import de.zbit.util.prefs.SBProperties;
  *
  * @author Andreas Dr&auml;ger
  */
-class Parameters {
+public class Parameters {
 
   /**
    * Singleton for ModelPolisher parameters

@@ -195,7 +195,6 @@ public class Registry {
     }
     // no longer supported by identifiers.org, but should still resolve, keep and fix missing id prefix
     if (resource.contains("ncbigi")) {
-      String URLWithoutId = Registry.getDataCollectionPartFromURI(resource);
       String[] split = resource.split("/");
       int len = split.length;
       String id = split[len - 1];

@@ -430,7 +430,7 @@ public class ModelPolisher extends Launcher {
     doc = polisher.polish(doc);
     // Annotation
     if (parameters.annotateWithBiGG()) {
-      BiGGAnnotation annotation = setAnnotationParameters();
+      BiGGAnnotation annotation = new BiGGAnnotation();
       doc = annotation.annotate(doc);
     }
     // writing polished model
@@ -499,27 +499,6 @@ public class ModelPolisher extends Launcher {
     polisher.setFluxObjectives(parameters.fluxObjectives());
     return polisher;
   }
-
-
-  /**
-   * @return BiGGAnnotation object used for annotation with BiGG
-   */
-  private BiGGAnnotation setAnnotationParameters() {
-    BiGGAnnotation annotation = new BiGGAnnotation();
-    if ((parameters.noModelNotes() != null) && parameters.noModelNotes()) {
-      annotation.setDocumentNotesFile(null);
-      annotation.setModelNotesFile(null);
-    } else {
-      if (parameters.documentNotesFile() != null) {
-        annotation.setDocumentNotesFile(parameters.documentNotesFile());
-      }
-      if (parameters.modelNotesFile() != null) {
-        annotation.setModelNotesFile(parameters.modelNotesFile());
-      }
-    }
-    return annotation;
-  }
-
 
   /**
    * @param doc:
