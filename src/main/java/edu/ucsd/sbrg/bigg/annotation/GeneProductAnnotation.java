@@ -19,7 +19,7 @@ import static edu.ucsd.sbrg.bigg.BiGGAnnotation.getBiGGIdFromResources;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
 import static java.text.MessageFormat.format;
 
-public class GeneProductAnnotation implements CVTermAnnotation {
+public class GeneProductAnnotation extends CVTermAnnotation {
 
   /**
    * A {@link Logger} for this class.
@@ -53,7 +53,7 @@ public class GeneProductAnnotation implements CVTermAnnotation {
     // fix geneProductReference in Association not updated
     SBMLUtils.updateGeneProductReference(geneProduct);
     biggId.ifPresent(id -> {
-      setCVTermResources(id);
+      addAnnotations(id);
       if (geneProduct.getCVTermCount() > 0) {
         geneProduct.setMetaId(id.toBiGGId());
       }
@@ -131,7 +131,7 @@ public class GeneProductAnnotation implements CVTermAnnotation {
    *        {@link BiGGId} from species id
    */
   @Override
-  public void setCVTermResources(BiGGId biggId) {
+  public void addAnnotations(BiGGId biggId) {
     CVTerm termIs = new CVTerm(Qualifier.BQB_IS);
     CVTerm termEncodedBy = new CVTerm(Qualifier.BQB_IS_ENCODED_BY);
     // label is stored without "G_" prefix in BiGG

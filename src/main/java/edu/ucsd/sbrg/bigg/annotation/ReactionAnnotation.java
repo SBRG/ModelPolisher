@@ -4,13 +4,10 @@ import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.bigg.Parameters;
 import edu.ucsd.sbrg.bigg.SBMLPolisher;
-import edu.ucsd.sbrg.db.AnnotateDB;
 import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.QueryOnce;
-import edu.ucsd.sbrg.miriam.Registry;
 import edu.ucsd.sbrg.util.GPRParser;
 import edu.ucsd.sbrg.util.SBMLUtils;
-import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.CVTerm.Qualifier;
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.Reaction;
@@ -19,23 +16,18 @@ import org.sbml.jsbml.ext.groups.Group;
 import org.sbml.jsbml.ext.groups.GroupsConstants;
 import org.sbml.jsbml.ext.groups.GroupsModelPlugin;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static edu.ucsd.sbrg.bigg.BiGGAnnotation.getBiGGIdFromResources;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
 
-public class ReactionAnnotation implements CVTermAnnotation {
+public class ReactionAnnotation extends CVTermAnnotation {
 
   /**
    * A {@link Logger} for this class.
@@ -66,7 +58,7 @@ public class ReactionAnnotation implements CVTermAnnotation {
     checkId().ifPresent(biggId -> {
       setName(biggId);
       setSBOTerm(biggId);
-      setCVTermResources(biggId);
+      addAnnotations(biggId);
       parseGeneReactionRules(biggId);
       parseSubsystems(biggId);
     });
@@ -133,52 +125,8 @@ public class ReactionAnnotation implements CVTermAnnotation {
    *        {@link BiGGId} from reaction id
    */
   @Override
-  public void setCVTermResources(BiGGId biggId) {
-    // Set of annotations calculated from BiGGDB and AnnotateDB
-    CVTerm cvTerm = null;
-    for (CVTerm term : reaction.getAnnotation().getListOfCVTerms()) {
-      if (term.getQualifier() == Qualifier.BQB_IS) {
-        cvTerm = term;
-        reaction.removeCVTerm(term);
-        break;
-      }
-    }
-    if (cvTerm == null) {
-      cvTerm = new CVTerm(Qualifier.BQB_IS);
-    }
-    Set<String> annotations = new HashSet<>();
-    boolean isBiGGReaction = QueryOnce.isReaction(biggId.getAbbreviation());
-    // using BiGG Database
-    if (isBiGGReaction) {
-      annotations.add(Registry.createURI("bigg.reaction", biggId));
-    }
-    Parameters parameters = Parameters.get();
-    Set<String> linkOut = BiGGDB.getResources(biggId, parameters.includeAnyURI(), true);
-    annotations.addAll(linkOut);
-    // using AnnotateDB
-    if (parameters.addADBAnnotations() && AnnotateDB.inUse() && isBiGGReaction) {
-      // TODO: probably similar problems as in the species case -- needs rework
-      Set<String> adb_annotations = AnnotateDB.getAnnotations(BIGG_REACTION, biggId.toBiGGId());
-      annotations.addAll(adb_annotations);
-    }
-    // add only annotations not already present in model
-    Set<String> existingAnnotations =
-      cvTerm.getResources().stream()
-            .map(resource -> resource.replaceAll("http://identifiers.org", "https://identifiers.org"))
-            .collect(Collectors.toSet());
-    annotations.removeAll(existingAnnotations);
-    // adding annotations to cvTerm
-    List<String> sortedAnnotations = new ArrayList<>(annotations);
-    Collections.sort(sortedAnnotations);
-    for (String annotation : sortedAnnotations) {
-      cvTerm.addResource(annotation);
-    }
-    if (cvTerm.getResourceCount() > 0) {
-      reaction.addCVTerm(cvTerm);
-    }
-    if ((reaction.getCVTermCount() > 0) && !reaction.isSetMetaId()) {
-      reaction.setMetaId(biggId.toBiGGId());
-    }
+  public void addAnnotations(BiGGId biggId) {
+    addAnnotations(reaction, biggId);
   }
 
 

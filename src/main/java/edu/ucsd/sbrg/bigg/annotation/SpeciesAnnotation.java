@@ -5,11 +5,8 @@ import de.zbit.util.Utils;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.bigg.Parameters;
 import edu.ucsd.sbrg.bigg.SBMLPolisher;
-import edu.ucsd.sbrg.db.AnnotateDB;
 import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.QueryOnce;
-import edu.ucsd.sbrg.miriam.Registry;
-import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.CVTerm.Qualifier;
 import org.sbml.jsbml.SBO;
 import org.sbml.jsbml.Species;
@@ -17,21 +14,17 @@ import org.sbml.jsbml.ext.fbc.FBCConstants;
 import org.sbml.jsbml.ext.fbc.FBCSpeciesPlugin;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static edu.ucsd.sbrg.bigg.BiGGAnnotation.getBiGGIdFromResources;
-import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_METABOLITE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
 import static java.text.MessageFormat.format;
 
-public class SpeciesAnnotation implements CVTermAnnotation {
+public class SpeciesAnnotation extends CVTermAnnotation {
 
   /**
    * A {@link Logger} for this class.
@@ -63,7 +56,7 @@ public class SpeciesAnnotation implements CVTermAnnotation {
     checkId().ifPresent(biggId -> {
       setName(biggId);
       setSBOTerm(biggId);
-      setCVTermResources(biggId);
+      addAnnotations(biggId);
       FBCSetFormulaCharge(biggId);
     });
   }
@@ -152,52 +145,8 @@ public class SpeciesAnnotation implements CVTermAnnotation {
    *        {@link BiGGId} from species id
    */
   @Override
-  public void setCVTermResources(BiGGId biggId) {
-    // Set of annotations calculated from BiGGDB and AnnotateDB
-    CVTerm cvTerm = null;
-    for (CVTerm term : species.getAnnotation().getListOfCVTerms()) {
-      if (term.getQualifier() == Qualifier.BQB_IS) {
-        cvTerm = term;
-        species.removeCVTerm(term);
-        break;
-      }
-    }
-    if (cvTerm == null) {
-      cvTerm = new CVTerm(Qualifier.BQB_IS);
-    }
-    Set<String> annotations = new HashSet<>();
-    boolean isBiGGMetabolite = QueryOnce.isMetabolite(biggId.getAbbreviation());
-    // using BiGG Database
-    if (isBiGGMetabolite) {
-      annotations.add(Registry.createURI("bigg.metabolite", biggId));
-    }
-    Parameters parameters = Parameters.get();
-    Set<String> linkOut = BiGGDB.getResources(biggId, parameters.includeAnyURI(), false);
-    // convert to set to remove possible duplicates; TreeSet respects order
-    annotations.addAll(linkOut);
-    // using AnnotateDB
-    if (parameters.addADBAnnotations() && AnnotateDB.inUse() && isBiGGMetabolite) {
-      Set<String> adb_annotations = AnnotateDB.getAnnotations(BIGG_METABOLITE, biggId.toBiGGId());
-      annotations.addAll(adb_annotations);
-    }
-    // don't add resources that are already present
-    Set<String> existingAnnotations =
-      cvTerm.getResources().stream()
-            .map(resource -> resource.replaceAll("http://identifiers.org", "https://identifiers.org"))
-            .collect(Collectors.toSet());
-    annotations.removeAll(existingAnnotations);
-    // adding annotations to cvTerm
-    List<String> sortedAnnotations = new ArrayList<>(annotations);
-    Collections.sort(sortedAnnotations);
-    for (String annotation : sortedAnnotations) {
-      cvTerm.addResource(annotation);
-    }
-    if (cvTerm.getResourceCount() > 0) {
-      species.addCVTerm(cvTerm);
-    }
-    if ((species.getCVTermCount() > 0) && !species.isSetMetaId()) {
-      species.setMetaId(species.getId());
-    }
+  public void addAnnotations(BiGGId biggId) {
+    addAnnotations(species, biggId);
   }
 
 
