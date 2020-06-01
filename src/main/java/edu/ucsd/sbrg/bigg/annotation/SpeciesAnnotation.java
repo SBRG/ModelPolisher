@@ -158,10 +158,10 @@ public class SpeciesAnnotation extends CVTermAnnotation {
    */
   @SuppressWarnings("deprecation")
   private void FBCSetFormulaCharge(BiGGId biggId) {
-    String modelId = species.getModel().getId();
+    boolean isBiGGModel = species.getModel() !=null && QueryOnce.isModel(species.getModel().getId());
+
     String compartmentCode = biggId.getCompartmentCode();
     FBCSpeciesPlugin fbcSpecPlug = (FBCSpeciesPlugin) species.getPlugin(FBCConstants.shortLabel);
-    boolean isBiGGModel = QueryOnce.isModel(modelId);
     boolean compartmentNonEmpty = compartmentCode != null && !compartmentCode.equals("");
     if (!fbcSpecPlug.isSetChemicalFormula()) {
       Optional<String> chemicalFormula = Optional.empty();

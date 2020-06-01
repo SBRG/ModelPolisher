@@ -375,7 +375,7 @@ public class BiGGAnnotation {
   private void annotateListOfGeneProducts(Model model) {
     if (model.isSetPlugin(FBCConstants.shortLabel)) {
       FBCModelPlugin fbcModelPlugin = (FBCModelPlugin) model.getPlugin(FBCConstants.shortLabel);
-      // update progress bar for added geneProducts
+      // update progress bar for added geneProducts, i.e. change dummy count to correct one
       int changed = fbcModelPlugin.getNumGeneProducts() - initialGeneProducts;
       if (changed > 0) {
         long current = progress.getCallNumber();

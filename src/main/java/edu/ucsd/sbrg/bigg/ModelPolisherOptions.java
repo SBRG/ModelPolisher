@@ -3,14 +3,12 @@
  */
 package edu.ucsd.sbrg.bigg;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
+import de.zbit.util.prefs.KeyProvider;
+import de.zbit.util.prefs.Option;
 
 import java.io.File;
 
-import de.zbit.util.objectwrapper.ValuePairUncomparable;
-import de.zbit.util.prefs.KeyProvider;
-import de.zbit.util.prefs.Option;
-import de.zbit.util.prefs.Range;
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 
 /**
  * @author Andreas Dr&auml;ger
@@ -38,7 +36,7 @@ public interface ModelPolisherOptions extends KeyProvider {
     /**
      * 
      */
-    private String extension;
+    private final String extension;
 
     /**
      * 
@@ -163,7 +161,5 @@ public interface ModelPolisherOptions extends KeyProvider {
    */
   @SuppressWarnings("unchecked")
   Option<Boolean> SBML_VALIDATION =
-    new Option<>("SBML_VALIDATION", Boolean.class, MESSAGES.getString("SBML_VAL_DESC"), Boolean.FALSE,
-      new ValuePairUncomparable<>(COMPRESSION_TYPE, new Range<>(Compression.class, Compression.GZIP)),
-      new ValuePairUncomparable<>(COMPRESSION_TYPE, new Range<>(Compression.class, Compression.ZIP)));
+    new Option<>("SBML_VALIDATION", Boolean.class, MESSAGES.getString("SBML_VAL_DESC"), Boolean.FALSE);
 }

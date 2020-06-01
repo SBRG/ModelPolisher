@@ -3,7 +3,6 @@
  */
 package edu.ucsd.sbrg.bigg;
 
-import de.unirostock.sems.cbarchive.CombineArchive;
 import de.zbit.AppConf;
 import de.zbit.Launcher;
 import de.zbit.io.FileTools;
@@ -22,34 +21,25 @@ import edu.ucsd.sbrg.db.BiGGDBOptions;
 import edu.ucsd.sbrg.db.DBConfig;
 import edu.ucsd.sbrg.parsers.COBRAparser;
 import edu.ucsd.sbrg.parsers.JSONparser;
+import edu.ucsd.sbrg.util.CombineArchive;
 import edu.ucsd.sbrg.util.GPRParser;
 import edu.ucsd.sbrg.util.SBMLUtils;
 import edu.ucsd.sbrg.util.UpdateListener;
-import org.sbml.jsbml.Compartment;
-import org.sbml.jsbml.Reaction;
 import org.sbml.jsbml.SBMLDocument;
 import org.sbml.jsbml.SBMLError;
 import org.sbml.jsbml.SBMLErrorLog;
 import org.sbml.jsbml.SBMLReader;
-import org.sbml.jsbml.Species;
 import org.sbml.jsbml.TidySBMLWriter;
-import org.sbml.jsbml.ext.fbc.FBCConstants;
-import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
-import org.sbml.jsbml.ext.fbc.GeneProduct;
 import org.sbml.jsbml.ext.fbc.converters.CobraToFbcV2Converter;
 import org.sbml.jsbml.util.SBMLtools;
 import org.sbml.jsbml.util.ValuePair;
 import org.sbml.jsbml.validator.SBMLValidator;
 import org.sbml.jsbml.validator.offline.LoggingValidationContext;
-import org.sbml.jsbml.xml.XMLNode;
-import org.sbml.jsbml.xml.parsers.SBMLRDFAnnotationParser;
-import org.w3c.tidy.Tidy;
 
 import javax.xml.stream.XMLStreamException;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -58,14 +48,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -201,8 +189,8 @@ public class ModelPolisher extends Launcher {
       if (!output.isDirectory()) {
         // input == dir && output != dir -> should only happen if already inside a directory and trying to recurse,
         // which is not supported
-        logger.warning(format(MESSAGES.getString("WRITE_DIR_TO_FILE_ERROR"), input.getAbsolutePath(),
-          output.getAbsolutePath()));
+        logger.warning(
+          format(MESSAGES.getString("WRITE_DIR_TO_FILE_ERROR"), input.getAbsolutePath(), output.getAbsolutePath()));
         return;
       }
       File[] files = input.listFiles();
@@ -301,9 +289,15 @@ public class ModelPolisher extends Launcher {
     // get fileType array and check if any value is true
     fileType = getFileType(input);
     if (fileType.equals(FileType.UNKNOWN)) {
-      // TODO: move into resources for internationalization
-      logger.warning(format("Encountered file of unknown type in input : \"{0}\", skipping.", input.getPath()));
-      return;
+      // do this for now to update SBML files with top level namespace declarations (Possibly from CarveMe)
+      // should skip invokation of most of the code later on as tags are already replaced
+      checkHTMLTags(input);
+      fileType = getFileType(input);
+      // did not fix the issue, abort
+      if (fileType.equals(FileType.UNKNOWN)) {
+        logger.warning(format("Encountered file of unknown type in input : \"{0}\", skipping.", input.getPath()));
+        return;
+      }
     }
     if (output.isDirectory()) {
       output = getOutputFileName(input, output);
@@ -375,34 +369,33 @@ public class ModelPolisher extends Launcher {
    *        SBML file
    */
   private void checkHTMLTags(File input) {
-    FileInputStream iStream = null;
-    try {
-      iStream = new FileInputStream(input);
-    } catch (FileNotFoundException exc) {
-      logger.severe(format(MESSAGES.getString("READ_FILE_ERROR"), input.toPath()));
-    }
-    // If it's null, something went horribly wrong and a nullPointerException should be thrown
-    BufferedReader reader = new BufferedReader(new InputStreamReader(iStream));
     // Replace tags and replace file for processing
-    try {
+    try (FileInputStream iStream = new FileInputStream(input);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(iStream));) {
       StringBuilder sb = new StringBuilder();
       String line;
       while ((line = reader.readLine()) != null) {
         sb.append(line).append("\n");
       }
-      reader.close();
       String doc = sb.toString();
-      if (!doc.contains("<html ")) {
+      if (!doc.contains("<html xmlns") && !doc.contains("sbml:") && !doc.contains("html:html")) {
         logger.fine(MESSAGES.getString("TAGS_FINE_INFO"));
         return;
       }
-      doc = doc.replaceAll("<html ", "<body ");
+      // this is here now for top level namespace declarations until proper handling for such models is clear. See issue
+      // #100
+      doc = doc.replaceAll("sbml:", "");
+      doc = doc.replaceAll("xmlns:sbml", "xmlns");
+      doc = doc.replaceAll("html:html", "html:body");
+      // replace wrong tags
+      doc = doc.replaceAll("<html xmlns", "<body xmlns");
       doc = doc.replaceAll("</html>", "</body>");
       // Preserve a copy of the original.
       try {
         Path output = Paths.get(input.getAbsolutePath() + ".bak");
-        Files.copy(input.toPath(), output);
+        Files.copy(input.toPath(), output, StandardCopyOption.REPLACE_EXISTING);
       } catch (IOException e) {
+        // TODO: change this logging, we overwrite the file
         // We assume it was already corrected
         logger.info(MESSAGES.getString("SKIP_TAG_REPLACEMENT"));
         return;
@@ -411,7 +404,9 @@ public class ModelPolisher extends Launcher {
       writer.write(doc);
       logger.info(format(MESSAGES.getString("WROTE_CORRECT_HTML"), input.toPath()));
       writer.close();
-    } catch (IOException exc) {
+    } catch (FileNotFoundException exc) {
+      logger.severe(format(MESSAGES.getString("READ_FILE_ERROR"), input.toPath()));
+    } catch (IOException e) {
       logger.severe(MESSAGES.getString("READ_HTML_ERROR"));
     }
   }
@@ -439,8 +434,8 @@ public class ModelPolisher extends Launcher {
     // produce COMBINE archive and delete output model and glossary
     if (parameters.outputCOMBINE()) {
       // producing & writing glossary
-      writeGlossary(doc, output);
-      writeCombineArchive(output);
+      CombineArchive combineArchive = new CombineArchive(doc, output);
+      combineArchive.write();
     }
     if (parameters.compression() != Compression.NONE) {
       String fileExtension = parameters.compression().getFileExtension();
@@ -498,142 +493,6 @@ public class ModelPolisher extends Launcher {
     polisher.setFluxCoefficients(parameters.fluxCoefficients);
     polisher.setFluxObjectives(parameters.fluxObjectives());
     return polisher;
-  }
-
-  /**
-   * @param doc:
-   *        SBMLDocument to write glossary for
-   * @param output:
-   *        File SBMLDocument is written to
-   * @throws XMLStreamException:
-   *         propagated from {@link #getGlossary(SBMLDocument)} and #TidySBMLWriter.write
-   * @throws IOException:
-   *         propagated from {@link #writeTidyRDF(File, String)}
-   */
-  private void writeGlossary(SBMLDocument doc, File output) throws XMLStreamException, IOException {
-    String glossary = getGlossary(doc);
-    String glossaryLocation =
-      output.getAbsolutePath().substring(0, output.getAbsolutePath().lastIndexOf('.')) + "_glossary.rdf";
-    logger.info(format(MESSAGES.getString("WRITE_RDF_FILE_INFO"), glossaryLocation));
-    writeTidyRDF(new File(glossaryLocation), glossary);
-  }
-
-
-  /**
-   * @param output:
-   *        Output SBML file, location is used to get archive files
-   */
-  private void writeCombineArchive(File output) {
-    try {
-      String baseLocation = output.getAbsolutePath().substring(0, output.getAbsolutePath().lastIndexOf('.'));
-      String glossaryLocation = baseLocation + "_glossary.rdf";
-      String combineArcLocation = baseLocation + ".zip";
-      // check if archive file exists and delete
-      File caFile = new File(combineArcLocation);
-      if (caFile.exists()) {
-        if (!caFile.delete()) {
-          logger.severe(format("Failed to delete archive file \"{0}\"", caFile.getPath()));
-        }
-      }
-      // build and pack archive
-      CombineArchive ca = new CombineArchive(caFile);
-      File outputXML = new File(output.getAbsolutePath());
-      File outputRDF = new File(glossaryLocation);
-      ca.addEntry(outputXML, "model.xml", new URI("http://identifiers.org/combine.specifications/sbml"), true);
-      ca.addEntry(outputRDF, "glossary.rdf",
-        // generated from https://sems.uni-rostock.de/trac/combine-ext/wiki/CombineFormatizer
-        new URI("http://purl.org/NET/mediatypes/application/rdf+xml"), true);
-      logger.info(format(MESSAGES.getString("WRITE_RDF_FILE_INFO"), combineArcLocation));
-      ca.pack();
-      ca.close();
-      // clean up original of packed files
-      boolean rdfDeleted = outputRDF.delete();
-      boolean outputXMLDeleted = outputXML.delete();
-      logger.info(format(MESSAGES.getString("DELETE_FILE"), outputXML.getParent(), outputXMLDeleted));
-      logger.info(format(MESSAGES.getString("DELETE_FILE"), outputRDF.getParent(), rdfDeleted));
-    } catch (Exception e) {
-      logger.warning("Exception while producing COMBINE Archive:");
-      e.printStackTrace();
-    }
-  }
-
-
-  /**
-   * @param doc:
-   *        SBMLDocument to produce glossary for
-   * @return Glossary as XMLString or empty string, if either model is null or has no children
-   */
-  private String getGlossary(SBMLDocument doc) throws XMLStreamException {
-    SBMLRDFAnnotationParser rdfParser = new SBMLRDFAnnotationParser();
-    if (rdfParser.writeAnnotation(doc.getModel(), null) != null
-      && rdfParser.writeAnnotation(doc.getModel(), null).getChild(1) != null) {
-      XMLNode node = rdfParser.writeAnnotation(doc.getModel(), null).getChild(1);
-      for (Species s : doc.getModel().getListOfSpecies()) {
-        XMLNode tempNode = rdfParser.writeAnnotation(s, null);
-        if (tempNode != null && tempNode.getChildCount() != 0) {
-          node.addChild(tempNode.getChild(1));
-        }
-      }
-      for (Reaction r : doc.getModel().getListOfReactions()) {
-        XMLNode tempNode = rdfParser.writeAnnotation(r, null);
-        if (tempNode != null && tempNode.getChildCount() != 0) {
-          node.addChild(tempNode.getChild(1));
-        }
-      }
-      for (Compartment c : doc.getModel().getListOfCompartments()) {
-        XMLNode tempNode = rdfParser.writeAnnotation(c, null);
-        if (tempNode != null && tempNode.getChildCount() != 0) {
-          node.addChild(tempNode.getChild(1));
-        }
-      }
-      if (doc.getModel().isSetPlugin(FBCConstants.shortLabel)) {
-        FBCModelPlugin fbcModelPlugin = (FBCModelPlugin) doc.getModel().getPlugin(FBCConstants.shortLabel);
-        for (GeneProduct gP : fbcModelPlugin.getListOfGeneProducts()) {
-          XMLNode tempNode = rdfParser.writeAnnotation(gP, null);
-          if (tempNode != null && tempNode.getChildCount() != 0) {
-            node.addChild(tempNode.getChild(1));
-          }
-        }
-      }
-      return node.toXMLString();
-    } else {
-      return "";
-    }
-  }
-
-
-  /**
-   * @param outputFile,
-   *        rdfString
-   */
-  private void writeTidyRDF(File outputFile, String rdfString) throws FileNotFoundException {
-    Tidy tidy = new Tidy(); // obtain a new Tidy instance
-    tidy.setDropEmptyParas(false);
-    tidy.setHideComments(false);
-    tidy.setIndentContent(true);
-    tidy.setInputEncoding("UTF-8");
-    tidy.setOutputEncoding("UTF-8");
-    tidy.setQuiet(true);
-    tidy.setSmartIndent(true);
-    tidy.setTrimEmptyElements(true);
-    tidy.setWraplen(0);
-    tidy.setWrapAttVals(false);
-    tidy.setWrapScriptlets(true);
-    tidy.setLiteralAttribs(true);
-    tidy.setXmlOut(true);
-    tidy.setXmlSpace(true);
-    tidy.setXmlTags(true);
-    tidy.setSpaces(2);
-    Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8));
-    InputStreamReader in = new InputStreamReader(new ByteArrayInputStream(rdfString.getBytes(StandardCharsets.UTF_8)),
-      StandardCharsets.UTF_8);
-    tidy.parse(in, out);
-    try {
-      in.close();
-      out.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
   }
 
 
