@@ -421,7 +421,7 @@ public class ModelPolisher extends Launcher {
   private void polish(SBMLDocument doc, File output) throws IOException, XMLStreamException {
     doc = checkLevelAndVersion(doc);
     // Polishing
-    SBMLPolisher polisher = initializeSBMLPolisher();
+    SBMLPolisher polisher = new SBMLPolisher();
     doc = polisher.polish(doc);
     // Annotation
     if (parameters.annotateWithBiGG()) {
@@ -474,25 +474,6 @@ public class ModelPolisher extends Launcher {
     }
     CobraToFbcV2Converter converter = new CobraToFbcV2Converter();
     return converter.convert(doc);
-  }
-
-
-  /**
-   * @return SBMLPolisher object with all relevant paramters set
-   */
-  private SBMLPolisher initializeSBMLPolisher() {
-    SBMLPolisher polisher = new SBMLPolisher();
-    polisher.setCheckMassBalance(parameters.checkMassBalance());
-    polisher.setOmitGenericTerms(parameters.omitGenericTerms());
-    if (parameters.includeAnyURI() != null) {
-      polisher.setIncludeAnyURI(parameters.includeAnyURI());
-    }
-    if (parameters.documentTitlePattern() != null) {
-      polisher.setDocumentTitlePattern(parameters.documentTitlePattern());
-    }
-    polisher.setFluxCoefficients(parameters.fluxCoefficients);
-    polisher.setFluxObjectives(parameters.fluxObjectives());
-    return polisher;
   }
 
 

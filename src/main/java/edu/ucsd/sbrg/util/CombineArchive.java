@@ -76,43 +76,6 @@ public class CombineArchive {
 
 
   /**
-   */
-  private void writeCombineArchive() {
-    try {
-      String baseLocation = output.getAbsolutePath().substring(0, output.getAbsolutePath().lastIndexOf('.'));
-      String glossaryLocation = baseLocation + "_glossary.rdf";
-      String combineArcLocation = baseLocation + ".zip";
-      // check if archive file exists and delete
-      File caFile = new File(combineArcLocation);
-      if (caFile.exists()) {
-        if (!caFile.delete()) {
-          logger.severe(format("Failed to delete archive file \"{0}\"", caFile.getPath()));
-        }
-      }
-      // build and pack archive
-      de.unirostock.sems.cbarchive.CombineArchive ca = new de.unirostock.sems.cbarchive.CombineArchive(caFile);
-      File outputXML = new File(output.getAbsolutePath());
-      File outputRDF = new File(glossaryLocation);
-      ca.addEntry(outputXML, "model.xml", new URI("http://identifiers.org/combine.specifications/sbml"), true);
-      ca.addEntry(outputRDF, "glossary.rdf",
-        // generated from https://sems.uni-rostock.de/trac/combine-ext/wiki/CombineFormatizer
-        new URI("http://purl.org/NET/mediatypes/application/rdf+xml"), true);
-      logger.info(format(MESSAGES.getString("WRITE_RDF_FILE_INFO"), combineArcLocation));
-      ca.pack();
-      ca.close();
-      // clean up original of packed files
-      boolean rdfDeleted = outputRDF.delete();
-      boolean outputXMLDeleted = outputXML.delete();
-      logger.info(format(MESSAGES.getString("DELETE_FILE"), outputXML.getParent(), outputXMLDeleted));
-      logger.info(format(MESSAGES.getString("DELETE_FILE"), outputRDF.getParent(), rdfDeleted));
-    } catch (Exception e) {
-      logger.warning("Exception while producing COMBINE Archive:");
-      e.printStackTrace();
-    }
-  }
-
-
-  /**
    * @param doc:
    *        SBMLDocument to produce glossary for
    * @return Glossary as XMLString or empty string, if either model is null or has no children
@@ -152,6 +115,43 @@ public class CombineArchive {
       return node.toXMLString();
     } else {
       return "";
+    }
+  }
+
+
+  /**
+   */
+  private void writeCombineArchive() {
+    try {
+      String baseLocation = output.getAbsolutePath().substring(0, output.getAbsolutePath().lastIndexOf('.'));
+      String glossaryLocation = baseLocation + "_glossary.rdf";
+      String combineArcLocation = baseLocation + ".zip";
+      // check if archive file exists and delete
+      File caFile = new File(combineArcLocation);
+      if (caFile.exists()) {
+        if (!caFile.delete()) {
+          logger.severe(format("Failed to delete archive file \"{0}\"", caFile.getPath()));
+        }
+      }
+      // build and pack archive
+      de.unirostock.sems.cbarchive.CombineArchive ca = new de.unirostock.sems.cbarchive.CombineArchive(caFile);
+      File outputXML = new File(output.getAbsolutePath());
+      File outputRDF = new File(glossaryLocation);
+      ca.addEntry(outputXML, "model.xml", new URI("http://identifiers.org/combine.specifications/sbml"), true);
+      ca.addEntry(outputRDF, "glossary.rdf",
+        // generated from https://sems.uni-rostock.de/trac/combine-ext/wiki/CombineFormatizer
+        new URI("http://purl.org/NET/mediatypes/application/rdf+xml"), true);
+      logger.info(format(MESSAGES.getString("WRITE_RDF_FILE_INFO"), combineArcLocation));
+      ca.pack();
+      ca.close();
+      // clean up original of packed files
+      boolean rdfDeleted = outputRDF.delete();
+      boolean outputXMLDeleted = outputXML.delete();
+      logger.info(format(MESSAGES.getString("DELETE_FILE"), outputXML.getParent(), outputXMLDeleted));
+      logger.info(format(MESSAGES.getString("DELETE_FILE"), outputRDF.getParent(), rdfDeleted));
+    } catch (Exception e) {
+      logger.warning("Exception while producing COMBINE Archive:");
+      e.printStackTrace();
     }
   }
 

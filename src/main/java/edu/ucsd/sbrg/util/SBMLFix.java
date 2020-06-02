@@ -3,17 +3,12 @@
  */
 package edu.ucsd.sbrg.util;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-
-import javax.xml.stream.XMLStreamException;
-
+import de.zbit.io.ZIPUtils;
+import de.zbit.io.filefilter.SBFileFilter;
+import de.zbit.util.Utils;
+import de.zbit.util.logging.LogUtil;
 import edu.ucsd.sbrg.bigg.ModelPolisher;
+import edu.ucsd.sbrg.bigg.polishing.ReactionPolishing;
 import org.sbml.jsbml.ListOf;
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.Reaction;
@@ -28,11 +23,14 @@ import org.sbml.jsbml.ext.groups.GroupsConstants;
 import org.sbml.jsbml.ext.groups.GroupsModelPlugin;
 import org.sbml.jsbml.util.filters.NameFilter;
 
-import de.zbit.io.ZIPUtils;
-import de.zbit.io.filefilter.SBFileFilter;
-import de.zbit.util.Utils;
-import de.zbit.util.logging.LogUtil;
-import edu.ucsd.sbrg.bigg.SBMLPolisher;
+import javax.xml.stream.XMLStreamException;
+import java.io.File;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
+import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 
 /**
  * This is a stand-alone bug-fix program. It recursively traverses a directory
@@ -201,7 +199,7 @@ public class SBMLFix {
              * Search for biomass reaction in the model and use this as
              * objective.
              */
-            final Pattern pattern = SBMLPolisher.Patterns.BIOMASS_CASE_INSENSITIVE.getPattern();
+            final Pattern pattern = ReactionPolishing.Patterns.BIOMASS_CASE_INSENSITIVE.getPattern();
             Reaction rBiomass = listOfReactions.firstHit((obj) -> {
               return (obj instanceof Reaction) && pattern.matcher(((Reaction) obj).getId()).matches();
             });
