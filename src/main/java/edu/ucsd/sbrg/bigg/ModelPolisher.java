@@ -256,7 +256,11 @@ public class ModelPolisher extends Launcher {
      * file = d1/d2/d3 is taken as a file by method file.isDirectory()
      * Check if file is directory by checking presence or '.' in output.getName()
      */
-    return !file.getName().contains(".");
+    if (file.exists()) {
+      return file.isDirectory();
+    } else {
+      return !file.getName().contains(".");
+    }
   }
 
 

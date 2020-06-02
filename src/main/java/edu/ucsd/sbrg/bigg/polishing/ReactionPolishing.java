@@ -5,7 +5,6 @@ import de.zbit.kegg.AtomBalanceCheck.AtomCheckResult;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.bigg.Parameters;
 import edu.ucsd.sbrg.util.GPRParser;
-import edu.ucsd.sbrg.util.SBMLUtils;
 import org.sbml.jsbml.KineticLaw;
 import org.sbml.jsbml.ListOf;
 import org.sbml.jsbml.LocalParameter;
@@ -23,6 +22,7 @@ import org.sbml.jsbml.ext.fbc.Objective;
 import org.sbml.jsbml.util.ResourceManager;
 import org.sbml.jsbml.xml.XMLNode;
 
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -68,6 +68,7 @@ public class ReactionPolishing {
   /**
    * @return {@code true} if the given reaction qualifies for strict FBC.
    */
+  @SuppressWarnings("deprecated")
   public boolean polish() {
     String id = reaction.getId();
     if (id.isEmpty()) {
@@ -83,20 +84,26 @@ public class ReactionPolishing {
       return false;
     }
     BiGGId.createReactionId(id).ifPresent(this::setSBOTermFromPattern);
-    // TODO: make code more robust -> 'conflicting compartment codes?'
+    // TODO: this is confusing, as null is used to represent two different outcomes...
     String compartmentId = reaction.isSetCompartment() ? reaction.getCompartment() : null;
+    boolean conflict = false;
     if (reaction.isSetListOfReactants()) {
-      String cId = polish(reaction.getListOfReactants(), SBO.getReactant());
-      compartmentId = checkCId(cId, compartmentId);
-      if (compartmentId != null) {
-        reaction.setCompartment(compartmentId);
+      // Polishing of speciesReferences is a side effect here, which is ... well, not optimal
+      Optional<String> cIdFromReactants = polish(reaction.getListOfReactants(), SBO.getReactant());
+      conflict = cIdFromReactants.isEmpty();
+      // only set compartment code if all source agree
+      if (!conflict && (compartmentId == null || compartmentId.equals(cIdFromReactants.get()))) {
+        reaction.setCompartment(cIdFromReactants.get());
       }
     }
     if (reaction.isSetListOfProducts()) {
-      String cId = polish(reaction.getListOfProducts(), SBO.getProduct());
-      compartmentId = checkCId(cId, compartmentId);
-      if (compartmentId != null) {
-        reaction.setCompartment(compartmentId);
+      Optional<String> cIdFromProducts = polish(reaction.getListOfProducts(), SBO.getProduct());
+      conflict |= cIdFromProducts.isEmpty();
+      // only set compartment code if all source agree, else unset
+      if (!conflict && (compartmentId == null || compartmentId.equals(cIdFromProducts.get()))) {
+        reaction.setCompartment(cIdFromProducts.get());
+      } else {
+        reaction.unsetCompartment();
       }
     }
     if (!reaction.isSetMetaId() && (reaction.getCVTermCount() > 0)) {
@@ -107,18 +114,30 @@ public class ReactionPolishing {
       rName = rName.substring(0, rName.lastIndexOf('_'));
       reaction.setName(rName);
     }
-    SBMLUtils.setRequiredAttributes(reaction);
+    if (!reaction.isSetFast()) {
+      reaction.setFast(false);
+    }
+    if (!reaction.isSetReversible()) {
+      reaction.setReversible(false);
+    }
     // This is a check if we are producing invalid SBML.
     if ((reaction.getReactantCount() == 0) && (reaction.getProductCount() == 0)) {
       ResourceBundle bundle = ResourceManager.getBundle("org.sbml.jsbml.resources.cfg.Messages");
       logger.severe(format(bundle.getString("SBMLCoreParser.reactionWithoutParticipantsError"), reaction.getId()));
     } else {
-      checkBalance(reaction);
+      checkBalance();
     }
-    fluxObjectiveFromLocalParameter(reaction);
-    associationFromNotes(reaction);
-    boolean strict = checkBounds(reaction);
-    strict = checkReactantsProducts(reaction, strict);
+    // bounds cannot be fetched, if no model exists, thus for such cases the default should be false
+    boolean strict = false;
+    // only run when model is present, as this code either depends on the model or has side effects creating children
+    // objects for the model
+    if (reaction.getModel() != null) {
+      GPRParser.convertAssociationsToFBCV2(reaction, Parameters.get().omitGenericTerms());
+      fluxObjectiveFromLocalParameter();
+      associationFromNotes();
+      strict = checkBounds();
+    }
+    strict = checkReactantsProducts(strict);
     return strict;
   }
 
@@ -144,12 +163,19 @@ public class ReactionPolishing {
 
 
   /**
-   * @param speciesReferences
-   * @param defaultSBOterm
-   * @return
+   * Polishes {@link SpeciesReference}s, i.e. reactants or products and tries to retrieve a compartment code for the
+   * reaction,
+   * if it can be resolved unambiguously from the references
+   *
+   * @param speciesReferences:
+   *        List of reactants or products
+   * @param defaultSBOterm:
+   *        reactant or product SBO term
+   * @return {@link Optional#empty()} if compartment was not set for one of the species or could not be resolved
+   *         unambiguously, else {@link Optional#of}, where the wrapped string is the compartment code
    */
-  private String polish(ListOf<SpeciesReference> speciesReferences, int defaultSBOterm) {
-    String compartmentId = "";
+  private Optional<String> polish(ListOf<SpeciesReference> speciesReferences, int defaultSBOterm) {
+    Optional<String> compartmentId = Optional.empty();
     Model model = speciesReferences.getModel();
     for (SpeciesReference sr : speciesReferences) {
       if (!sr.isSetSBOTerm() && !Parameters.get().omitGenericTerms()) {
@@ -158,109 +184,87 @@ public class ReactionPolishing {
       if (!sr.isSetConstant()) {
         sr.setConstant(false);
       }
+      if (model == null) {
+        continue;
+      }
       Species species = model.getSpecies(sr.getSpecies());
       if (species != null) {
-        if (!species.isSetCompartment() || (compartmentId == null)
-          || (!compartmentId.isEmpty() && !compartmentId.equals(species.getCompartment()))) {
-          compartmentId = null;
+        // Assumed intention here, that conflicting compartment information cannot be resolved
+        if (!species.isSetCompartment()
+          || compartmentId.map(id -> !id.equals(species.getCompartment())).orElse(false)) {
+          return compartmentId;
         } else {
-          compartmentId = species.getCompartment();
+          compartmentId = Optional.of(species.getCompartment());
         }
       } else {
         logger.info(format(MESSAGES.getString("SPECIES_REFERENCE_INVALID"), sr.getSpecies()));
       }
     }
-    if ((compartmentId == null) || compartmentId.isEmpty()) {
-      return null;
-    }
     return compartmentId;
   }
 
 
   /**
-   * @param cId
-   * @param compartmentId
-   * @return
+   *
    */
-  private String checkCId(String cId, String compartmentId) {
-    if (cId == null) {
-      compartmentId = null;
-    } else {
-      if (compartmentId == null) {
-        compartmentId = cId;
-      } else if (!compartmentId.equals(cId)) {
-        compartmentId = null;
-      }
-    }
-    return compartmentId;
-  }
-
-
-  /**
-   * @param r
-   */
-  private void checkBalance(Reaction r) {
+  private void checkBalance() {
     // TODO: change messages
-    if (!r.isSetSBOTerm()) {
+    if (!reaction.isSetSBOTerm()) {
       // The reaction has not been recognized as demand or exchange reaction
-      if (r.getReactantCount() == 0) {
+      if (reaction.getReactantCount() == 0) {
         // fixme: Messages are wrong
-        if (r.isReversible()) {
+        if (reaction.isReversible()) {
           // TODO: sink reaction
-        } else if (r.getSBOTerm() != 628) {
+        } else if (reaction.getSBOTerm() != 628) {
           // logger.info(format(mpMessageBundle.getString("REACTION_DM_NOT_IN_ID"), r.getId()));
-          r.setSBOTerm(628); // demand reaction
+          reaction.setSBOTerm(628); // demand reaction
         }
-      } else if (r.getProductCount() == 0) {
-        if (r.isReversible()) {
+      } else if (reaction.getProductCount() == 0) {
+        if (reaction.isReversible()) {
           // TODO: source reaction
         } else {
           // logger.warning(format(mpMessageBundle.getString("REACTION_DM_NOT_IN_ID"), r.getId()));
-          r.setSBOTerm(628); // demand reaction
+          reaction.setSBOTerm(628); // demand reaction
         }
       }
     }
-    if (Parameters.get().checkMassBalance() && ((r.getSBOTerm() < 627) || (630 < r.getSBOTerm()))) {
+    if (Parameters.get().checkMassBalance() && ((reaction.getSBOTerm() < 627) || (630 < reaction.getSBOTerm()))) {
       // check atom balance only if the reaction is not identified as biomass
       // production, demand, exchange or ATP maintenance.
-      AtomCheckResult<Reaction> defects = AtomBalanceCheck.checkAtomBalance(r, 1);
+      AtomCheckResult<Reaction> defects = AtomBalanceCheck.checkAtomBalance(reaction, 1);
       if ((defects != null) && (defects.hasDefects())) {
-        logger.warning(format(MESSAGES.getString("ATOMS_MISSING"), r.getId(), defects.getDefects().toString()));
+        logger.warning(format(MESSAGES.getString("ATOMS_MISSING"), reaction.getId(), defects.getDefects().toString()));
       } else if (defects == null) {
-        logger.fine(format(MESSAGES.getString("CHECK_ATOM_BALANCE_FAILED"), r.getId()));
+        logger.fine(format(MESSAGES.getString("CHECK_ATOM_BALANCE_FAILED"), reaction.getId()));
       } else {
-        logger.fine(format(MESSAGES.getString("ATOMS_OK"), r.getId()));
+        logger.fine(format(MESSAGES.getString("ATOMS_OK"), reaction.getId()));
       }
     }
-    GPRParser.convertAssociationsToFBCV2(r, Parameters.get().omitGenericTerms());
   }
 
 
   /**
    * Set flux objective and its coefficient from reaction kinetic law, if no flux objective exists for the reaction
-   *
-   * @param r:
-   *        Reaction
    */
-  private void fluxObjectiveFromLocalParameter(Reaction r) {
-    FBCModelPlugin modelPlugin = (FBCModelPlugin) r.getModel().getPlugin(FBCConstants.shortLabel);
+  private void fluxObjectiveFromLocalParameter() {
+    FBCModelPlugin modelPlugin = (FBCModelPlugin) reaction.getModel().getPlugin(FBCConstants.shortLabel);
     Objective obj = modelPlugin.getObjective(0);
     if (obj == null) {
       obj = modelPlugin.createObjective("obj");
       obj.setType(Objective.Type.MAXIMIZE);
       modelPlugin.getListOfObjectives().setActiveObjective(obj.getId());
     }
-    boolean foExists = obj.getListOfFluxObjectives().stream().anyMatch(fo -> fo.getReactionInstance().equals(r));
+    boolean foExists = obj.getListOfFluxObjectives().stream().anyMatch(fo -> fo.getReactionInstance().equals(reaction));
     if (foExists) {
       return;
     }
-    KineticLaw kl = r.getKineticLaw();
+    KineticLaw kl = reaction.getKineticLaw();
     if (kl != null) {
       LocalParameter coefficient = kl.getLocalParameter("OBJECTIVE_COEFFICIENT");
       if (coefficient != null && coefficient.getValue() != 0d) {
-        FluxObjective fo = obj.createFluxObjective("fo_" + r.getId());
+        FluxObjective fo = obj.createFluxObjective("fo_" + reaction.getId());
         fo.setCoefficient(coefficient.getValue());
-        fo.setReaction(r);
+        fo.setReaction(reaction);
       }
     }
   }
@@ -268,14 +272,11 @@ public class ReactionPolishing {
 
   /**
    * Convert GENE_ASSOCIATION in reaction notes to FBCv2 {#GeneProductAssociation}
-   *
-   * @param r:
-   *        Reaction
    */
-  private void associationFromNotes(Reaction r) {
-    FBCReactionPlugin reactionPlugin = (FBCReactionPlugin) r.getPlugin(FBCConstants.shortLabel);
-    if (!reactionPlugin.isSetGeneProductAssociation() && r.isSetNotes()) {
-      XMLNode body = r.getNotes().getChildElement("body", null);
+  private void associationFromNotes() {
+    FBCReactionPlugin reactionPlugin = (FBCReactionPlugin) reaction.getPlugin(FBCConstants.shortLabel);
+    if (!reactionPlugin.isSetGeneProductAssociation() && reaction.isSetNotes()) {
+      XMLNode body = reaction.getNotes().getChildElement("body", null);
       if (body != null) {
         for (XMLNode p : body.getChildElements("p", null)) {
           if (p.getChildCount() == 1) {
@@ -285,7 +286,7 @@ public class ReactionPolishing {
               if (splits.length == 2) {
                 String association = splits[1];
                 if (!association.isEmpty()) {
-                  GPRParser.parseGPR(r, association, Parameters.get().omitGenericTerms());
+                  GPRParser.parseGPR(reaction, association, Parameters.get().omitGenericTerms());
                 }
               }
             }
@@ -300,24 +301,23 @@ public class ReactionPolishing {
    * Check if existing FBC flux bounds fulfill the strict requirement.
    * Bounds with no instance present are tried to be inferred from the reaction {#KineticLaw}
    *
-   * @param r
    * @return
    */
-  private boolean checkBounds(Reaction r) {
-    FBCReactionPlugin rPlug = (FBCReactionPlugin) r.getPlugin(FBCConstants.shortLabel);
+  private boolean checkBounds() {
+    FBCReactionPlugin rPlug = (FBCReactionPlugin) reaction.getPlugin(FBCConstants.shortLabel);
     Parameter lb = rPlug.getLowerFluxBoundInstance();
     Parameter ub = rPlug.getUpperFluxBoundInstance();
     boolean lbExists = polishFluxBound(lb);
     // set bounds from KineticLaw, if they are not set in FBC, create global Parameter, as required by specification
     if (!lbExists) {
-      LocalParameter bound = getBoundFromLocal(r, "LOWER_BOUND");
+      LocalParameter bound = getBoundFromLocal(reaction, "LOWER_BOUND");
       if (bound != null) {
         lb = new Parameter(bound);
-        Parameter existingParameter = getParameterVariant(r, lb, bound.getValue());
+        Parameter existingParameter = getParameterVariant(reaction, lb, bound.getValue());
         if (existingParameter != null) {
           rPlug.setLowerFluxBound(existingParameter);
         } else {
-          r.getModel().addParameter(lb);
+          reaction.getModel().addParameter(lb);
           rPlug.setLowerFluxBound(lb);
         }
         lbExists = polishFluxBound(rPlug.getLowerFluxBoundInstance());
@@ -325,14 +325,14 @@ public class ReactionPolishing {
     }
     boolean ubExists = polishFluxBound(ub);
     if (!ubExists) {
-      LocalParameter bound = getBoundFromLocal(r, "UPPER_BOUND");
+      LocalParameter bound = getBoundFromLocal(reaction, "UPPER_BOUND");
       if (bound != null) {
         ub = new Parameter(bound);
-        Parameter existingParameter = getParameterVariant(r, ub, bound.getValue());
+        Parameter existingParameter = getParameterVariant(reaction, ub, bound.getValue());
         if (existingParameter != null) {
           rPlug.setUpperFluxBound(existingParameter);
         } else {
-          r.getModel().addParameter(ub);
+          reaction.getModel().addParameter(ub);
           rPlug.setUpperFluxBound(ub);
         }
         ubExists = polishFluxBound(rPlug.getUpperFluxBoundInstance());
@@ -343,10 +343,10 @@ public class ReactionPolishing {
       strict = checkBound(lb) && lb.getValue() < Double.POSITIVE_INFINITY && checkBound(ub)
         && ub.getValue() > Double.NEGATIVE_INFINITY && lb.getValue() <= ub.getValue();
       if (!strict) {
-        logger.warning(format(MESSAGES.getString("FLUX_BOUND_ERROR"), r.getId()));
+        logger.warning(format(MESSAGES.getString("FLUX_BOUND_ERROR"), reaction.getId()));
       }
     } else {
-      logger.warning(format(MESSAGES.getString("FLUX_BOUNDS_MISSING"), r.getId()));
+      logger.warning(format(MESSAGES.getString("FLUX_BOUNDS_MISSING"), reaction.getId()));
     }
     return strict;
   }
@@ -427,21 +427,20 @@ public class ReactionPolishing {
 
 
   /**
-   * @param r
    * @param strict
    * @return
    */
-  private boolean checkReactantsProducts(Reaction r, boolean strict) {
-    if (strict && r.isSetListOfReactants()) {
-      strict = checkSpeciesReferences(r.getListOfReactants());
+  private boolean checkReactantsProducts(boolean strict) {
+    if (strict && reaction.isSetListOfReactants()) {
+      strict = checkSpeciesReferences(reaction.getListOfReactants());
       if (!strict) {
-        logger.warning(format(MESSAGES.getString("ILLEGAL_STOICH_REACT"), r.getId()));
+        logger.warning(format(MESSAGES.getString("ILLEGAL_STOICH_REACT"), reaction.getId()));
       }
     }
-    if (strict && r.isSetListOfProducts()) {
-      strict = checkSpeciesReferences(r.getListOfProducts());
+    if (strict && reaction.isSetListOfProducts()) {
+      strict = checkSpeciesReferences(reaction.getListOfProducts());
       if (!strict) {
-        logger.warning(format(MESSAGES.getString("ILLEGAL_STOICH_PROD"), r.getId()));
+        logger.warning(format(MESSAGES.getString("ILLEGAL_STOICH_PROD"), reaction.getId()));
       }
     }
     return strict;

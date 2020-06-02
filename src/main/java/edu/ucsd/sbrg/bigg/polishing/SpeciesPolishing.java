@@ -4,8 +4,6 @@ import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import org.sbml.jsbml.Compartment;
 import org.sbml.jsbml.Model;
-import org.sbml.jsbml.NamedSBase;
-import org.sbml.jsbml.Reaction;
 import org.sbml.jsbml.SBase;
 import org.sbml.jsbml.Species;
 
@@ -44,22 +42,19 @@ public class SpeciesPolishing {
       // remove species with missing id, produces invalid SBML
       if (species.isSetName()) {
         logger.severe(format(
-          "Removing species '{0}' due to missing id. Check your Model for entries missing the id attribute or duplicates.",
+          "Marked species '{0}' for removal due to missing id. Check your Model for entries missing the id attribute or duplicates.",
           species.getName()));
       } else {
-        logger.severe("Removing species with missing id and name. Check your Model for species without id and name.");
+        logger.severe("Marked species with missing id and name for removal. Check your Model for species without id and name.");
       }
       return Optional.of(species);
     }
+    //TODO: this is likely not correct, something should be done with this species id
     if (species.getId().endsWith("_boundary")) {
       logger.warning(format(MESSAGES.getString("SPECIES_ID_INVALID"), id));
-      id = id.substring(0, id.length() - 9);
-      boolean uniqueId = species.getModel().findUniqueNamedSBase(id) == null;
-      if (uniqueId) {
-        if (!species.isSetBoundaryCondition() || !species.isBoundaryCondition()) {
-          logger.warning(format(MESSAGES.getString("BOUNDARY_FLAG_MISSING"), id));
-          species.setBoundaryCondition(true);
-        }
+      if (!species.isSetBoundaryCondition() || !species.isBoundaryCondition()) {
+        logger.warning(format(MESSAGES.getString("BOUNDARY_FLAG_MISSING"), id));
+        species.setBoundaryCondition(true);
       }
     } else if (!species.isSetBoundaryCondition()) {
       species.setBoundaryCondition(false);
@@ -91,37 +86,37 @@ public class SpeciesPolishing {
 
 
   /**
-   * @param nsb
+   * @param species
    */
-  public void checkCompartment(NamedSBase nsb) {
-    if ((nsb instanceof Species) && !((Species) nsb).isSetCompartment()) {
-      Optional<BiGGId> biggId = BiGGId.createMetaboliteId(nsb.getId());
+  public void checkCompartment(Species species) {
+    if (!species.isSetCompartment()) {
+      Optional<BiGGId> biggId = BiGGId.createMetaboliteId(species.getId());
       boolean setCompartment = false;
       if (biggId.isPresent()) {
         if (biggId.get().isSetCompartmentCode()) {
-          ((Species) nsb).setCompartment(biggId.get().getCompartmentCode());
+          species.setCompartment(biggId.get().getCompartmentCode());
           setCompartment = true;
         }
       }
       if (!setCompartment) {
         return;
       }
-    } else if ((nsb instanceof Reaction) && !((Reaction) nsb).isSetCompartment()) {
+    }
+    String cId = species.getCompartment();
+    Model model = species.getModel();
+    // We could polish a species without model
+    if(model == null){
       return;
     }
-    if (nsb instanceof Species) {
-      String cId = ((Species) nsb).getCompartment();
-      Model model = nsb.getModel();
-      SBase candidate = model.findUniqueNamedSBase(cId);
-      if (candidate instanceof Compartment) {
-        // compartment can't be null here, instanceof would evaluate to false
-        CompartmentPolishing compartmentPolishing = new CompartmentPolishing((Compartment) candidate);
-        compartmentPolishing.polish();
-      } else if (candidate == null) {
-        logger.warning(format(MESSAGES.getString("CREATE_MISSING_COMP"), cId, nsb.getId(), nsb.getElementName()));
-        CompartmentPolishing compartmentPolishing = new CompartmentPolishing(model.createCompartment(cId));
-        compartmentPolishing.polish();
-      }
+    SBase candidate = model.findUniqueNamedSBase(cId);
+    if (candidate instanceof Compartment) {
+      // compartment can't be null here, instanceof would evaluate to false
+      CompartmentPolishing compartmentPolishing = new CompartmentPolishing((Compartment) candidate);
+      compartmentPolishing.polish();
+    } else if (candidate == null) {
+      logger.warning(format(MESSAGES.getString("CREATE_MISSING_COMP"), cId, species.getId(), species.getElementName()));
+      CompartmentPolishing compartmentPolishing = new CompartmentPolishing(model.createCompartment(cId));
+      compartmentPolishing.polish();
     }
   }
 }

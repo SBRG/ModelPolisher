@@ -17,14 +17,11 @@ import org.sbml.jsbml.ext.fbc.Objective;
 import org.sbml.jsbml.ext.groups.Member;
 
 import javax.swing.tree.TreeNode;
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 
 /**
  * A collection of helpful functions for dealing with SBML data structures.
@@ -131,31 +128,6 @@ public class SBMLUtils {
         }
       }
     }
-  }
-
-
-  /**
-   * @param r
-   */
-  @SuppressWarnings("deprecation")
-  public static void setRequiredAttributes(Reaction r) {
-    // TODO: make defaults user settings or take from L2V5.
-    if (!r.isSetId()) {
-      logger.severe(MessageFormat.format(MESSAGES.getString("ID_MISSING_FOR_TYPE"), r.getElementName()));
-    }
-    if (!r.isSetFast()) {
-      r.setFast(false);
-    }
-    if (!r.isSetReversible()) {
-      r.setReversible(false);
-    }
-    if (!r.isSetMetaId() && ((r.getCVTermCount() > 0) || r.isSetHistory())) {
-      r.setMetaId(r.getId());
-    }
-    // TODO
-    // if (!r.isSetSBOTerm()) {
-    // r.setSBOTerm(SBO.getProcess());
-    // }
   }
 
 
