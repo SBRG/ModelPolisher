@@ -18,35 +18,25 @@ import de.zbit.util.ResourceManager;
 import de.zbit.util.progressbar.AbstractProgressBar;
 import de.zbit.util.progressbar.ProgressBar;
 import edu.ucsd.sbrg.bigg.polishing.CompartmentPolishing;
-import edu.ucsd.sbrg.bigg.polishing.GeneProductPolishing;
+import edu.ucsd.sbrg.bigg.polishing.ModelPolishing;
 import edu.ucsd.sbrg.bigg.polishing.ReactionPolishing;
 import edu.ucsd.sbrg.bigg.polishing.SpeciesPolishing;
 import edu.ucsd.sbrg.miriam.Registry;
-import edu.ucsd.sbrg.util.SBMLFix;
 import org.sbml.jsbml.CVTerm;
-import org.sbml.jsbml.InitialAssignment;
 import org.sbml.jsbml.ListOf;
 import org.sbml.jsbml.Model;
-import org.sbml.jsbml.Parameter;
 import org.sbml.jsbml.SBMLDocument;
-import org.sbml.jsbml.SBO;
 import org.sbml.jsbml.SBase;
 import org.sbml.jsbml.Species;
-import org.sbml.jsbml.SpeciesReference;
 import org.sbml.jsbml.Unit;
 import org.sbml.jsbml.UnitDefinition;
-import org.sbml.jsbml.Variable;
 import org.sbml.jsbml.ext.fbc.FBCConstants;
 import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
-import org.sbml.jsbml.ext.fbc.FluxObjective;
-import org.sbml.jsbml.ext.fbc.GeneProduct;
-import org.sbml.jsbml.ext.fbc.Objective;
 import org.sbml.jsbml.util.ModelBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 import static java.text.MessageFormat.format;
@@ -67,7 +57,7 @@ public class SBMLPolisher {
   /**
    *
    */
-  private AbstractProgressBar progress;
+  protected AbstractProgressBar progress;
 
   /**
    *
@@ -116,28 +106,12 @@ public class SBMLPolisher {
     }
     progress = new ProgressBar(count);
     progress.DisplayBar("Polishing Model (1/9)  ");
-    if (!model.isSetMetaId() && (model.getCVTermCount() > 0)) {
-      model.setMetaId(model.getId());
-    }
     polishListOfUnitDefinitions(model);
     polishListOfCompartments(model);
     polishListOfSpecies(model);
     boolean strict = polishListOfReactions(model);
-    if (strict && model.isSetListOfInitialAssignments()) {
-      strict = polishListOfInitialAssignments(model, true);
-    }
-    FBCModelPlugin modelPlug = (FBCModelPlugin) model.getPlugin(FBCConstants.shortLabel);
-    if (modelPlug.isSetListOfObjectives()) {
-      strict &= polishListOfObjectives(strict, modelPlug);
-    }
-    if (model.isSetPlugin(FBCConstants.shortLabel)) {
-      FBCModelPlugin fbcModelPlug = (FBCModelPlugin) model.getPlugin(FBCConstants.shortLabel);
-      if (fbcModelPlug.isSetListOfGeneProducts()) {
-        polishListOfGeneProducts(fbcModelPlug);
-      }
-    }
-    polishListOfParameters(model);
-    modelPlug.setStrict(strict);
+    ModelPolishing modelPolishing = new ModelPolishing(model, strict, progress);
+    modelPolishing.polish();
   }
 
 
@@ -292,118 +266,6 @@ public class SBMLPolisher {
       strict &= reactionPolishing.polish();
     }
     return strict;
-  }
-
-
-  /**
-   * @param model
-   * @param strict
-   * @return
-   */
-  public boolean polishListOfInitialAssignments(Model model, boolean strict) {
-    for (InitialAssignment ia : model.getListOfInitialAssignments()) {
-      progress.DisplayBar("Polishing Initial Assignments (6/9)  ");
-      Variable variable = ia.getVariableInstance();
-      if (variable != null) {
-        if (variable instanceof Parameter) {
-          if (variable.isSetSBOTerm() && SBO.isChildOf(variable.getSBOTerm(), 625)) {
-            strict = false;
-            logger.warning(format(MESSAGES.getString("FLUX_BOUND_STRICT_CHANGE"), variable.getId()));
-          }
-        } else if (variable instanceof SpeciesReference) {
-          strict = false;
-        }
-      }
-    }
-    return strict;
-  }
-
-
-  /**
-   * @param strict
-   * @param modelPlug
-   * @return
-   */
-  public boolean polishListOfObjectives(boolean strict, FBCModelPlugin modelPlug) {
-    if (modelPlug.getObjectiveCount() == 0) {
-      // Note: the strict attribute does not require the presence of any Objectives in the model.
-      logger.warning(format(MESSAGES.getString("OBJ_MISSING"), modelPlug.getParent().getId()));
-    } else {
-      for (Objective objective : modelPlug.getListOfObjectives()) {
-        progress.DisplayBar("Polishing Objectives (7/9)  "); // "Processing objective " + objective.getId());
-        if (!objective.isSetListOfFluxObjectives()) {
-          Model model = modelPlug.getParent();
-          strict &= SBMLFix.fixObjective(model.getId(), model.getListOfReactions(), modelPlug,
-            Parameters.get().fluxCoefficients(), Parameters.get().fluxObjectives());
-        }
-        if (objective.isSetListOfFluxObjectives()) {
-          strict &= polishListOfFluxObjectives(strict, objective);
-        }
-      }
-      // removed unused objectives, i.e. those without flux objectives
-      modelPlug.getListOfObjectives().stream().filter(Predicate.not(Objective::isSetListOfFluxObjectives))
-               .forEach(modelPlug::removeObjective);
-    }
-    return strict;
-  }
-
-
-  /**
-   * @param strict
-   * @param objective
-   * @return
-   */
-  public boolean polishListOfFluxObjectives(boolean strict, Objective objective) {
-    if (objective.getFluxObjectiveCount() == 0) {
-      // Note: the strict attribute does not require the presence of any flux objectives.
-      logger.warning(format(MESSAGES.getString("OBJ_FLUX_OBJ_MISSING"), objective.getId()));
-    } else {
-      if (objective.getFluxObjectiveCount() > 1) {
-        logger.warning(format(MESSAGES.getString("TOO_MUCH_OBJ_TARGETS"), objective.getId()));
-      }
-      for (FluxObjective fluxObjective : objective.getListOfFluxObjectives()) {
-        if (!fluxObjective.isSetCoefficient() || Double.isNaN(fluxObjective.getCoefficient())
-          || !Double.isFinite(fluxObjective.getCoefficient())) {
-          logger.warning(format(MESSAGES.getString("FLUX_OBJ_COEFF_INVALID"), fluxObjective.getReaction()));
-        }
-      }
-    }
-    return strict;
-  }
-
-
-  /**
-   * @param fbcModelPlug
-   */
-  public void polishListOfGeneProducts(FBCModelPlugin fbcModelPlug) {
-    for (GeneProduct geneProduct : fbcModelPlug.getListOfGeneProducts()) {
-      progress.DisplayBar("Polishing Gene Products (8/9)  ");
-      GeneProductPolishing geneProductPolishing = new GeneProductPolishing(geneProduct);
-      geneProductPolishing.polish();
-    }
-  }
-
-
-  /**
-   * @param model
-   */
-  public void polishListOfParameters(Model model) {
-    for (int i = 0; i < model.getParameterCount(); i++) {
-      progress.DisplayBar("Polishing Parameters (9/9)  ");
-      Parameter parameter = model.getParameter(i);
-      polish(parameter);
-    }
-  }
-
-
-  /**
-   * @param p
-   */
-  private void polish(Parameter p) {
-    if (p.isSetId() && !p.isSetName()) {
-      // TODO: what is happening here?
-      p.setName(polishName(p.getId()));
-    }
   }
 
 
