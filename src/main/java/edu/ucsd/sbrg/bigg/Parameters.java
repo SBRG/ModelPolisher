@@ -1,9 +1,12 @@
 package edu.ucsd.sbrg.bigg;
 
+import de.zbit.util.ResourceManager;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBProperties;
 
 import java.io.File;
+import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 /**
  * Helper class to store all parameters for running ModelPolisher in batch
@@ -13,6 +16,14 @@ import java.io.File;
  */
 public class Parameters {
 
+  /**
+   * {@link Logger} for this class
+   */
+  private static final transient Logger logger = Logger.getLogger(Parameters.class.getName());
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  public static transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * Singleton for ModelPolisher parameters
    */
@@ -79,11 +90,19 @@ public class Parameters {
    * @see ModelPolisherOptions#SBML_VALIDATION
    */
   private Boolean sbmlValidation = null;
+  /**
+   * @see IOOptions#INPUT
+   */
+  private File input = null;
+  /**
+   * @see IOOptions#OUTPUT
+   */
+  private File output = null;
 
   /**
    * 
    */
-  private Parameters(SBProperties args) {
+  private Parameters(SBProperties args) throws IllegalArgumentException {
     super();
     initParameters(args);
   }
@@ -92,7 +111,7 @@ public class Parameters {
   /**
    * 
    */
-  static Parameters init(SBProperties args) {
+  static Parameters init(SBProperties args) throws IllegalArgumentException {
     if (parameters == null) {
       parameters = new Parameters(args);
     }
@@ -114,24 +133,29 @@ public class Parameters {
    * @param args:
    *        Arguments from commandline
    */
-  private void initParameters(SBProperties args) {
-    String documentTitlePattern = "[biggId] - [organism]";
-    if (args.containsKey(ModelPolisherOptions.DOCUMENT_TITLE_PATTERN)) {
-      documentTitlePattern = args.getProperty(ModelPolisherOptions.DOCUMENT_TITLE_PATTERN);
+  private void initParameters(SBProperties args) throws IllegalArgumentException {
+    String inPath = args.getProperty(IOOptions.INPUT);
+    if (inPath == null) {
+      throw new IllegalArgumentException("--input is missing, but needs to be provided, aborting.");
     }
-    double[] coefficients = null;
+    input = new File(inPath);
+    String outPath = args.getProperty(IOOptions.OUTPUT);
+    if (outPath == null) {
+      throw new IllegalArgumentException("--output is missing, but needs to be provided, aborting.");
+    }
+    output = new File(outPath);
+    documentTitlePattern = args.getProperty(ModelPolisherOptions.DOCUMENT_TITLE_PATTERN);
     if (args.containsKey(ModelPolisherOptions.FLUX_COEFFICIENTS)) {
       String c = args.getProperty(ModelPolisherOptions.FLUX_COEFFICIENTS);
       String[] coeff = c.substring(1, c.length() - 1).split(",");
-      coefficients = new double[coeff.length];
+      fluxCoefficients = new double[coeff.length];
       for (int i = 0; i < coeff.length; i++) {
-        coefficients[i] = Double.parseDouble(coeff[i].trim());
+        fluxCoefficients[i] = Double.parseDouble(coeff[i].trim());
       }
     }
-    String[] fObj = null;
     if (args.containsKey(ModelPolisherOptions.FLUX_OBJECTIVES)) {
       String fObjectives = args.getProperty(ModelPolisherOptions.FLUX_OBJECTIVES);
-      fObj = fObjectives.substring(1, fObjectives.length() - 1).split(":");
+      fluxObjectives = fObjectives.substring(1, fObjectives.length() - 1).split(":");
     }
     annotateWithBiGG = args.getBooleanProperty(ModelPolisherOptions.ANNOTATE_WITH_BIGG);
     outputCOMBINE = args.getBooleanProperty(ModelPolisherOptions.OUTPUT_COMBINE);
@@ -140,9 +164,6 @@ public class Parameters {
     noModelNotes = args.getBooleanProperty(ModelPolisherOptions.NO_MODEL_NOTES);
     compression = ModelPolisherOptions.Compression.valueOf(args.getProperty(ModelPolisherOptions.COMPRESSION_TYPE));
     documentNotesFile = parseFileOption(args, ModelPolisherOptions.DOCUMENT_NOTES_FILE);
-    this.documentTitlePattern = documentTitlePattern;
-    fluxCoefficients = coefficients;
-    fluxObjectives = fObj;
     includeAnyURI = args.getBooleanProperty(ModelPolisherOptions.INCLUDE_ANY_URI);
     modelNotesFile = parseFileOption(args, ModelPolisherOptions.MODEL_NOTES_FILE);
     omitGenericTerms = args.getBooleanProperty(ModelPolisherOptions.OMIT_GENERIC_TERMS);
@@ -242,7 +263,12 @@ public class Parameters {
   }
 
 
-  public void setDocumentTitlePattern(String modelNamePattern) {
-    documentTitlePattern = modelNamePattern;
+  public File input() {
+    return input;
+  }
+
+
+  public File output() {
+    return output;
   }
 }

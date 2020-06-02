@@ -123,37 +123,22 @@ public class ModelPolisher extends Launcher {
 
   /*
    * (non-Javadoc)
-   * @see de.zbit.Launcher#addCopyrightToSplashScreen()
-   */
-  @Override
-  protected boolean addCopyrightToSplashScreen() {
-    return false;
-  }
-
-
-  /*
-   * (non-Javadoc)
-   * @see de.zbit.Launcher#addVersionNumberToSplashScreen()
-   */
-  @Override
-  protected boolean addVersionNumberToSplashScreen() {
-    return false;
-  }
-
-
-  /*
-   * (non-Javadoc)
    * @see de.zbit.Launcher#commandLineMode(de.zbit.AppConf)
    */
   @Override
   public void commandLineMode(AppConf appConf) {
     SBProperties args = appConf.getCmdArgs();
-    parameters = Parameters.init(args);
+    try {
+      parameters = Parameters.init(args);
+    } catch (IllegalArgumentException exc) {
+      logger.severe(exc.getLocalizedMessage());
+      exit();
+    }
     DBConfig.initBiGG(args, parameters.annotateWithBiGG());
     DBConfig.initADB(args, parameters.addADBAnnotations());
     // Gives users the choice to pass an alternative model notes XHTML file to the program.
     try {
-      batchProcess(new File(args.getProperty(IOOptions.INPUT)), new File(args.getProperty(IOOptions.OUTPUT)));
+      batchProcess(parameters.input(), parameters.output());
     } catch (XMLStreamException | IOException exc) {
       exc.printStackTrace();
     }
@@ -679,6 +664,26 @@ public class ModelPolisher extends Launcher {
     } catch (Throwable t) {
       return (short) 2014;
     }
+  }
+
+
+  /*
+   * (non-Javadoc)
+   * @see de.zbit.Launcher#addCopyrightToSplashScreen()
+   */
+  @Override
+  protected boolean addCopyrightToSplashScreen() {
+    return false;
+  }
+
+
+  /*
+   * (non-Javadoc)
+   * @see de.zbit.Launcher#addVersionNumberToSplashScreen()
+   */
+  @Override
+  protected boolean addVersionNumberToSplashScreen() {
+    return false;
   }
 
 

@@ -24,21 +24,16 @@ public interface IOOptions extends KeyProvider {
    * will be recursively performed. MAT files will be converted to SBML prior to
    * polishing.
    */
-  public static final Option<File> INPUT  = new Option<File>("INPUT",
-      File.class, "Input SBML file",
-      new Range<File>(File.class,
-          new MultipleFileFilter(MESSAGES.getString("INPUT_DESC"),
-            SBFileFilter.createSBMLFileFilter(), SBFileFilter.createMATFileFilter(),
-            SBFileFilter.createJSONFileFilter(),
-            SBFileFilter.createDirectoryFilter())));
+  Option<File> INPUT = new Option<>("INPUT", File.class, "Input SBML file",
+    new Range<>(File.class,
+      new MultipleFileFilter(MESSAGES.getString("INPUT_DESC"), SBFileFilter.createSBMLFileFilter(),
+        SBFileFilter.createMATFileFilter(), SBFileFilter.createJSONFileFilter(),
+        SBFileFilter.createDirectoryFilter())));
   /**
    * The path to the file into which the output should be written. If the
    * input is a directory, this must also be a directory in order to perform a
    * recursive conversion.
    */
-  public static final Option<File> OUTPUT =
-      new Option<File>("OUTPUT", File.class, MESSAGES.getString("OUTPUT_DESC"),
-          new Range<File>(File.class,
-              new MultipleFileFilter("SBML", SBFileFilter.createSBMLFileFilter(),
-                SBFileFilter.createDirectoryFilter())));
+  Option<File> OUTPUT = new Option<>("OUTPUT", File.class, MESSAGES.getString("OUTPUT_DESC"), new Range<>(File.class,
+    new MultipleFileFilter("SBML", SBFileFilter.createSBMLFileFilter(), SBFileFilter.createDirectoryFilter())));
 }
