@@ -5,6 +5,7 @@ package edu.ucsd.sbrg.util;
 
 import de.zbit.io.ZIPUtils;
 import de.zbit.io.filefilter.SBFileFilter;
+import de.zbit.util.ResourceManager;
 import de.zbit.util.Utils;
 import de.zbit.util.logging.LogUtil;
 import edu.ucsd.sbrg.bigg.ModelPolisher;
@@ -27,10 +28,9 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 
 /**
  * This is a stand-alone bug-fix program. It recursively traverses a directory
@@ -57,10 +57,13 @@ public class SBMLFix {
    */
   private static final transient Logger logger = Logger.getLogger(SBMLFix.class.getName());
   /**
+   * Bundle for ModelPolisher logger messages
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  /**
    * 
    */
   private static final double DEFAULT_COEFFICIENT = 1d;
-
 
   /**
    * @param input
@@ -189,8 +192,7 @@ public class SBMLFix {
                 // strict model.
                 strict = true;
               } else {
-                logger.severe(
-                  MessageFormat.format(MESSAGES.getString("REACTION_UNKNOWN_ERROR"), id, modelDescriptor));
+                logger.severe(MessageFormat.format(MESSAGES.getString("REACTION_UNKNOWN_ERROR"), id, modelDescriptor));
               }
             }
             return strict;

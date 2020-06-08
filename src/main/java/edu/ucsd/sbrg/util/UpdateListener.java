@@ -1,5 +1,6 @@
 package edu.ucsd.sbrg.util;
 
+import de.zbit.util.ResourceManager;
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.NamedSBase;
 import org.sbml.jsbml.Reaction;
@@ -19,10 +20,9 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 
 /**
  * This class keeps track of changes to the model and tries to keep cross
@@ -37,10 +37,14 @@ public class UpdateListener implements TreeNodeChangeListener {
    */
   private static final transient Logger logger = Logger.getLogger(UpdateListener.class.getName());
   /**
+   * Bundle for ModelPolisher logger messages
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  /**
    * Stores links from geneIds to {@link Association} objects where these are
    * used.
    */
-  private Map<String, Set<GeneProductRef>> geneIdToAssociation;
+  private final Map<String, Set<GeneProductRef>> geneIdToAssociation;
 
   /**
    * 

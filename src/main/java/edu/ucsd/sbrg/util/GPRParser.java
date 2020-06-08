@@ -1,5 +1,6 @@
 package edu.ucsd.sbrg.util;
 
+import de.zbit.util.ResourceManager;
 import de.zbit.util.Utils;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import org.sbml.jsbml.ASTNode;
@@ -25,10 +26,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 import static java.text.MessageFormat.format;
 
 public class GPRParser {
@@ -37,6 +38,10 @@ public class GPRParser {
    * A {@link Logger} for this class.
    */
   private static final Logger logger = Logger.getLogger(GPRParser.class.getName());
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * Mapping holding geneAssociations from model annotations
    */
@@ -64,8 +69,7 @@ public class GPRParser {
           convertToAssociation(ASTNode.parseFormula(geneReactionRule, new CobraFormulaParser(new StringReader(""))),
             r.getId(), r.getModel(), omitGenericTerms);
       } catch (Throwable exc) {
-        logger.warning(
-          format(MESSAGES.getString("PARSE_GPR_ERROR"), geneReactionRule, Utils.getMessage(exc)));
+        logger.warning(format(MESSAGES.getString("PARSE_GPR_ERROR"), geneReactionRule, Utils.getMessage(exc)));
       }
       if (association != null) {
         parseGPR(r, association, omitGenericTerms);

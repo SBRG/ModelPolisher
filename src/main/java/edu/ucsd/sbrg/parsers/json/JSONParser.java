@@ -1,14 +1,15 @@
-package edu.ucsd.sbrg.parsers;
+package edu.ucsd.sbrg.parsers.json;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.zbit.sbml.util.SBMLtools;
+import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.miriam.Registry;
-import edu.ucsd.sbrg.parsers.models.Compartments;
-import edu.ucsd.sbrg.parsers.models.Gene;
-import edu.ucsd.sbrg.parsers.models.Metabolite;
-import edu.ucsd.sbrg.parsers.models.Reaction;
-import edu.ucsd.sbrg.parsers.models.Root;
+import edu.ucsd.sbrg.parsers.json.models.Compartments;
+import edu.ucsd.sbrg.parsers.json.models.Gene;
+import edu.ucsd.sbrg.parsers.json.models.Metabolite;
+import edu.ucsd.sbrg.parsers.json.models.Reaction;
+import edu.ucsd.sbrg.parsers.json.models.Root;
 import edu.ucsd.sbrg.util.GPRParser;
 import edu.ucsd.sbrg.util.SBMLUtils;
 import edu.ucsd.sbrg.util.UpdateListener;
@@ -41,29 +42,33 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 import static java.text.MessageFormat.format;
 import static org.sbml.jsbml.util.Pair.pairOf;
 
 /**
  * @author Thomas Jakob Zajac
  */
-public class JSONparser {
+public class JSONParser {
 
   /**
    * A {@link Logger} for this class.
    */
-  private static final transient Logger logger = Logger.getLogger(JSONparser.class.getName());
+  private static final transient Logger logger = Logger.getLogger(JSONParser.class.getName());
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
 
   /**
    * 
    */
-  public JSONparser() {
+  public JSONParser() {
     super();
   }
 
@@ -75,7 +80,7 @@ public class JSONparser {
    * @throws IOException
    */
   public static SBMLDocument read(File jsonFile) throws IOException {
-    JSONparser parser = new JSONparser();
+    JSONParser parser = new JSONParser();
     return parser.parse(jsonFile);
   }
 

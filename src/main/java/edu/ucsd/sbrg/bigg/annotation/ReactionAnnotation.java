@@ -1,9 +1,8 @@
 package edu.ucsd.sbrg.bigg.annotation;
 
-import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.bigg.Parameters;
-import edu.ucsd.sbrg.bigg.SBMLPolisher;
+import edu.ucsd.sbrg.bigg.polishing.SBMLPolisher;
 import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.QueryOnce;
 import edu.ucsd.sbrg.util.GPRParser;
@@ -20,11 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static edu.ucsd.sbrg.bigg.BiGGAnnotation.getBiGGIdFromResources;
+import static edu.ucsd.sbrg.bigg.annotation.BiGGAnnotation.getBiGGIdFromResources;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
 
 public class ReactionAnnotation extends CVTermAnnotation {
@@ -33,10 +31,6 @@ public class ReactionAnnotation extends CVTermAnnotation {
    * A {@link Logger} for this class.
    */
   static final transient Logger logger = Logger.getLogger(ReactionAnnotation.class.getName());
-  /**
-   * Localization support.
-   */
-  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * Instance of reaction to annotate
    */

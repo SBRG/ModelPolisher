@@ -4,7 +4,7 @@ import de.zbit.util.ResourceManager;
 import de.zbit.util.Utils;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.bigg.Parameters;
-import edu.ucsd.sbrg.bigg.SBMLPolisher;
+import edu.ucsd.sbrg.bigg.polishing.SBMLPolisher;
 import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.QueryOnce;
 import org.sbml.jsbml.CVTerm.Qualifier;
@@ -20,7 +20,7 @@ import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static edu.ucsd.sbrg.bigg.BiGGAnnotation.getBiGGIdFromResources;
+import static edu.ucsd.sbrg.bigg.annotation.BiGGAnnotation.getBiGGIdFromResources;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
 import static java.text.MessageFormat.format;
 

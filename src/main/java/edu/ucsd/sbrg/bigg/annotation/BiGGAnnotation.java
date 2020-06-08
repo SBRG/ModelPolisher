@@ -1,13 +1,9 @@
-package edu.ucsd.sbrg.bigg;
+package edu.ucsd.sbrg.bigg.annotation;
 
 import de.zbit.util.ResourceManager;
 import de.zbit.util.progressbar.AbstractProgressBar;
 import de.zbit.util.progressbar.ProgressBar;
-import edu.ucsd.sbrg.bigg.annotation.CompartmentAnnotation;
-import edu.ucsd.sbrg.bigg.annotation.GeneProductAnnotation;
-import edu.ucsd.sbrg.bigg.annotation.ModelAnnotation;
-import edu.ucsd.sbrg.bigg.annotation.ReactionAnnotation;
-import edu.ucsd.sbrg.bigg.annotation.SpeciesAnnotation;
+import edu.ucsd.sbrg.bigg.Parameters;
 import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.BiGGDBContract;
 import edu.ucsd.sbrg.db.QueryOnce;

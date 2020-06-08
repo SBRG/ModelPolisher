@@ -23,7 +23,7 @@ public class Parameters {
   /**
    * Bundle for ModelPolisher logger messages
    */
-  public static transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * Singleton for ModelPolisher parameters
    */

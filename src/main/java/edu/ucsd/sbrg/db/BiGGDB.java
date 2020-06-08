@@ -14,6 +14,7 @@
  */
 package edu.ucsd.sbrg.db;
 
+import de.zbit.util.ResourceManager;
 import de.zbit.util.Utils;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.miriam.Registry;
@@ -30,12 +31,12 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ACCESSION_VALUE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.BIGG_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.CHARGE;
@@ -97,6 +98,10 @@ public class BiGGDB {
    * A {@link Logger} for this class.
    */
   private static final transient Logger logger = Logger.getLogger(BiGGDB.class.getName());
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * The connection to the database.
    */

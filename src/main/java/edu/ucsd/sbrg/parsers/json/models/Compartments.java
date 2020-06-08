@@ -1,4 +1,4 @@
-package edu.ucsd.sbrg.parsers.models;
+package edu.ucsd.sbrg.parsers.json.models;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonGetter;

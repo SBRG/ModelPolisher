@@ -27,12 +27,19 @@ import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 import static java.text.MessageFormat.format;
 
 public class ReactionPolishing {
 
+  /**
+   * A {@link Logger} for this class.
+   */
   private final static transient Logger logger = Logger.getLogger(ReactionPolishing.class.getName());
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  private static final transient ResourceBundle MESSAGES =
+    de.zbit.util.ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   private final Reaction reaction;
 
   /**

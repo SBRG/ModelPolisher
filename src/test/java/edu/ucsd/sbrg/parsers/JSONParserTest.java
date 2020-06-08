@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import edu.ucsd.sbrg.parsers.json.JSONParser;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,11 +30,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.parsers.models.Compartments;
-import edu.ucsd.sbrg.parsers.models.Metabolite;
-import edu.ucsd.sbrg.parsers.models.Reaction;
+import edu.ucsd.sbrg.parsers.json.models.Compartments;
+import edu.ucsd.sbrg.parsers.json.models.Metabolite;
+import edu.ucsd.sbrg.parsers.json.models.Reaction;
 
-public class JSONparserTest {
+public class JSONParserTest {
 
   private static ModelBuilder builder;
   private static final int LEVEL = 3;
@@ -58,7 +59,7 @@ public class JSONparserTest {
       e.printStackTrace();
     }
     assertNotNull(compartments);
-    JSONparser parser = new JSONparser();
+    JSONParser parser = new JSONParser();
     parser.parseCompartments(builder, compartments.get());
     Model model = builder.getModel();
     assertEquals(3, model.getListOfCompartments().size());
@@ -96,7 +97,7 @@ public class JSONparserTest {
       e.printStackTrace();
     }
     assertNotNull(reaction);
-    JSONparser parser = new JSONparser();
+    JSONParser parser = new JSONParser();
     BiGGId.createReactionId(reaction.getId()).ifPresentOrElse(id -> assertEquals("R_FAH1", id.toBiGGId()),
       Assertions::fail);
     parser.parseReaction(builder, reaction, "R_FAH1");
@@ -178,7 +179,7 @@ public class JSONparserTest {
     assertNotNull(metabolite);
     BiGGId.createMetaboliteId(metabolite.getId()).ifPresentOrElse(id -> assertEquals("M_amp_e", id.toBiGGId()),
       Assertions::fail);
-    JSONparser parser = new JSONparser();
+    JSONParser parser = new JSONParser();
     parser.parseMetabolite(builder.getModel(), metabolite, BiGGId.createMetaboliteId(metabolite.getId()).get());
     Species species = builder.getModel().getSpecies("M_amp_e");
     assertNotNull(species);

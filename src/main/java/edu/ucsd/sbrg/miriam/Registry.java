@@ -1,5 +1,6 @@
 package edu.ucsd.sbrg.miriam;
 
+import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.miriam.models.Miriam;
 import org.sbml.jsbml.util.Pair;
@@ -10,12 +11,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
 import static java.text.MessageFormat.format;
 
 public class Registry {
@@ -24,6 +25,10 @@ public class Registry {
    * A {@link Logger} for this class.
    */
   static final transient Logger logger = Logger.getLogger(Registry.class.getName());
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    *
    */
@@ -189,8 +194,8 @@ public class Registry {
    * @return corrected resource URI
    */
   public static Optional<String> checkResourceUrl(String resource) {
-    //TODO: temporary fix, http vs https should be irrelevant, handle urlPattern differently for proper handling
-    if(resource.startsWith("http://www.reactome.org")){
+    // TODO: temporary fix, http vs https should be irrelevant, handle urlPattern differently for proper handling
+    if (resource.startsWith("http://www.reactome.org")) {
       resource = resource.replaceAll("http://www.reactome.org", "https://www.reactome.org");
     }
     // no longer supported by identifiers.org, but should still resolve, keep and fix missing id prefix
@@ -338,9 +343,9 @@ public class Registry {
       logger.info(format(MESSAGES.getString("CHANGED_REACTOME"), resource_old, resource));
     } else if (resource.contains("refseq") && resource.contains("WP_")) {
       resource = replace(resource, "refseq", "ncbiprotein");
-      logger.info(format(
-        "Ids starting with 'WP_' seem to belong to 'ncbiprotein', not 'refseq'. Changed accordingly for '{0}'",
-        resource));
+      logger.info(
+        format("Ids starting with 'WP_' seem to belong to 'ncbiprotein', not 'refseq'. Changed accordingly for '{0}'",
+          resource));
     } else if (resource.contains("rhea") && resource.contains("#")) {
       // remove last part, it's invalid either way, even though it gets resolved due to misinterpretation as non
       // existing anchor

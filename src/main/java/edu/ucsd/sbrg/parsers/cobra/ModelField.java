@@ -1,7 +1,8 @@
-/**
- * 
- */
-package edu.ucsd.sbrg.parsers;
+package edu.ucsd.sbrg.parsers.cobra;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * For more information about COBRA model fields, see the following
@@ -12,6 +13,7 @@ package edu.ucsd.sbrg.parsers;
  * @author Andreas Dr&auml;ger
  */
 public enum ModelField {
+
   /**
    * Matrix of constraints, form <i>&mu; &sdot; A &sdot; v + B &sdot; v =
    * 0</i> or g(<i>&mu;</i>) &sdot; <i>A &sdot; v + B &sdot; v = 0</i> with
@@ -64,6 +66,10 @@ public enum ModelField {
    */
   citations,
   /**
+   * TODO
+   */
+  coefficients,
+  /**
    * These are human-readable notes for reactions.
    */
   comments,
@@ -76,7 +82,7 @@ public enum ModelField {
   confidenceScores,
   /**
    * The csense field expresses equality constraints in the model. If this field
-   * is not defined in the reconstruction, equality constraints are assumed when
+   * is not defin object.getType();ed in the reconstruction, equality constraints are assumed when
    * performing the optimization. Its value is a {@link String} whose length
    * must equal the number of metabolites. An 'E' at index <i>i</i> means that
    * in this dimension <i>S &sdot; v = b</i> (equality), 'G' means &ge; greater
@@ -146,7 +152,10 @@ public enum ModelField {
   /**
    * Elemental formula for each metabolite. This must have same dimension as
    * {@link #mets}. Datatype: cell array of strings. Corresponds to
-   * {@link FBCSpeciesPlugin#getChemicalFormula()}.
+   * {@link FBCSpeciesPlugin#getChemicalFormula()}.import org.sbml.jsbml.ext.fbc.FBCSpeciesPlugin;
+   * import org.sbml.jsbml.ext.fbc.FluxObjective;
+   * import org.sbml.jsbml.ext.fbc.GeneProduct;
+   * import org.sbml.jsbml.ext.fbc.GeneProductAssociation;
    */
   metFormulas,
   /**
@@ -213,7 +222,7 @@ public enum ModelField {
    * A vector consisting of zeros and ones that translate to binary and determine
    * if the corresponding reaction of that index is reversible (1) or not (0).
    * Dimensions must be equal to the number of reactions. Corresponds to the
-   * value {@linkReaction#isReversible()}
+   * value {@link Reaction#isReversible()}
    */
   rev,
   /**
@@ -257,11 +266,11 @@ public enum ModelField {
    * number of reactions. Data type: cell array of string. Corresponds to the
    * name of a {@link Reaction}.
    */
+  rxnNames,
   /**
    * TODO: description KEGG Orthology
    */
   rxnKeggOrthology,
-  rxnNames,
   /**
    * E. C. number for each reaction
    * 
@@ -305,4 +314,36 @@ public enum ModelField {
    * Upper reaction flux bounds for corresponding reactions
    */
   ub;
+
+  /**
+   * Get known model field variant name for a struct field, disregarding upper/lowercase discrepancies, if case can't be
+   * matched
+   *
+   * @param query:
+   *        Possible model field, present in model struct
+   * @return List of matching ModelField variant names
+   */
+  public static List<String> getCorrectName(String query) {
+    List<String> normalVariant = Arrays.stream(ModelField.values()).map(Enum::name).filter(name -> name.equals(query))
+                                       .collect(Collectors.toList());
+    if (normalVariant.size() != 1) {
+      return Arrays.stream(ModelField.values()).map(Enum::name)
+                   .filter(name -> name.toLowerCase().equals(query.toLowerCase())).collect(Collectors.toList());
+    } else {
+      return normalVariant;
+    }
+  }
+
+
+  /**
+   * Get known model field variant name for a struct field, disregarding upper/lowercase discrepancies using struct
+   * field as prefix of knwon model field
+   *
+   * @param query
+   * @return
+   */
+  public static List<String> getNameForPrefix(String query) {
+    return Arrays.stream(ModelField.values()).map(Enum::name)
+                 .filter(name -> name.toLowerCase().startsWith(query.toLowerCase())).collect(Collectors.toList());
+  }
 }

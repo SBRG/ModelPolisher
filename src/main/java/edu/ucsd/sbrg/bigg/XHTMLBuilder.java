@@ -1,6 +1,3 @@
-/**
- * 
- */
 package edu.ucsd.sbrg.bigg;
 
 import java.util.Map;
@@ -24,7 +21,7 @@ public class XHTMLBuilder {
    * @param attributes
    * @return
    */
-  public static String table(Object header[], Object data[][], String caption, Map<String, String> attributes) {
+  public static String table(Object[] header, Object[][] data, String caption, Map<String, String> attributes) {
     StringBuilder sb = new StringBuilder();
     sb.append("<table");
     if (attributes != null) {
@@ -48,7 +45,7 @@ public class XHTMLBuilder {
       sb.append("</tr>\n");
     }
     if ((data != null) && (data.length > 0)) {
-      for (Object row[] : data) {
+      for (Object[] row : data) {
         if ((row != null) && (row.length > 0)) {
           sb.append("<tr>");
           for (Object entry : row) {

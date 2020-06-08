@@ -14,13 +14,15 @@ import de.zbit.util.logging.LogOptions;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.SBProperties;
 import edu.ucsd.sbrg.bigg.ModelPolisherOptions.Compression;
+import edu.ucsd.sbrg.bigg.annotation.BiGGAnnotation;
+import edu.ucsd.sbrg.bigg.polishing.SBMLPolisher;
 import edu.ucsd.sbrg.db.ADBOptions;
 import edu.ucsd.sbrg.db.AnnotateDB;
 import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.BiGGDBOptions;
 import edu.ucsd.sbrg.db.DBConfig;
-import edu.ucsd.sbrg.parsers.COBRAparser;
-import edu.ucsd.sbrg.parsers.JSONparser;
+import edu.ucsd.sbrg.parsers.cobra.COBRAParser;
+import edu.ucsd.sbrg.parsers.json.JSONParser;
 import edu.ucsd.sbrg.util.CombineArchive;
 import edu.ucsd.sbrg.util.GPRParser;
 import edu.ucsd.sbrg.util.SBMLUtils;
@@ -85,7 +87,7 @@ public class ModelPolisher extends Launcher {
   /**
    * Bundle for ModelPolisher logger messages
    */
-  public static transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * A {@link Logger} for this class.
    */
@@ -331,9 +333,9 @@ public class ModelPolisher extends Launcher {
     SBMLDocument doc;
     // reading or parsing input
     if (fileType.equals(FileType.MAT_FILE)) {
-      doc = COBRAparser.read(input, parameters.omitGenericTerms());
+      doc = COBRAParser.read(input);
     } else if (fileType.equals(FileType.JSON_FILE)) {
-      doc = JSONparser.read(input);
+      doc = JSONParser.read(input);
     } else {
       checkHTMLTags(input);
       doc = SBMLReader.read(input, new UpdateListener());
@@ -408,6 +410,10 @@ public class ModelPolisher extends Launcher {
    * @throws XMLStreamException
    */
   private void polish(SBMLDocument doc, File output) throws IOException, XMLStreamException {
+    if(doc.getModel() == null){
+      logger.severe("No model present in SBML Document, aborting");
+      return;
+    }
     doc = checkLevelAndVersion(doc);
     // Polishing
     SBMLPolisher polisher = new SBMLPolisher();

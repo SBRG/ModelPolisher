@@ -38,7 +38,7 @@ public class CombineArchive {
   /**
    * Bundle for ModelPolisher logger messages
    */
-  public static transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * {@link SBMLDocument} to write glossary for
    */

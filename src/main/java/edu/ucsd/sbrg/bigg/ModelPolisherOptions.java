@@ -3,17 +3,22 @@
  */
 package edu.ucsd.sbrg.bigg;
 
+import de.zbit.util.ResourceManager;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 
 import java.io.File;
-
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
+import java.util.ResourceBundle;
 
 /**
  * @author Andreas Dr&auml;ger
  */
 public interface ModelPolisherOptions extends KeyProvider {
+
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
 
   /**
    * @author Andreas Dr&auml;ger
@@ -77,14 +82,14 @@ public interface ModelPolisherOptions extends KeyProvider {
    * or correction from BiGG Models database
    */
   @SuppressWarnings("unchecked")
-  Option<Boolean> ANNOTATE_WITH_BIGG = new Option<>("ANNOTATE_WITH_BIGG", Boolean.class,
-    MESSAGES.getString("ANNOTATE_WITH_BIGG_DESC"), Boolean.FALSE);
+  Option<Boolean> ANNOTATE_WITH_BIGG =
+    new Option<>("ANNOTATE_WITH_BIGG", Boolean.class, MESSAGES.getString("ANNOTATE_WITH_BIGG_DESC"), Boolean.FALSE);
   /**
    * If set to true, annotations will be added to species and reactions from AnnotateDB also.
    */
   @SuppressWarnings("unchecked")
-  Option<Boolean> ADD_ADB_ANNOTATIONS = new Option<>("ADD_ADB_ANNOTATIONS", Boolean.class,
-    MESSAGES.getString("ADD_ADB_ANNOTATIONS_DESC"), Boolean.FALSE);
+  Option<Boolean> ADD_ADB_ANNOTATIONS =
+    new Option<>("ADD_ADB_ANNOTATIONS", Boolean.class, MESSAGES.getString("ADD_ADB_ANNOTATIONS_DESC"), Boolean.FALSE);
   /**
    * If set to true, no web content will be inserted in the SBML container nor
    * into the model within the SBML file.
@@ -99,20 +104,20 @@ public interface ModelPolisherOptions extends KeyProvider {
    * composition of their participants.
    */
   @SuppressWarnings("unchecked")
-  Option<Boolean> CHECK_MASS_BALANCE = new Option<>("CHECK_MASS_BALANCE", Boolean.class,
-    MESSAGES.getString("CHECK_MASS_BALANCE_DESC"), Boolean.TRUE);
+  Option<Boolean> CHECK_MASS_BALANCE =
+    new Option<>("CHECK_MASS_BALANCE", Boolean.class, MESSAGES.getString("CHECK_MASS_BALANCE_DESC"), Boolean.TRUE);
   /**
    * 
    */
   @SuppressWarnings("unchecked")
-  Option<Double[]> FLUX_COEFFICIENTS = new Option<>("FLUX_COEFFICIENTS", Double[].class,
-    MESSAGES.getString("FLUX_COEFF_DESC"), new Double[0]);
+  Option<Double[]> FLUX_COEFFICIENTS =
+    new Option<>("FLUX_COEFFICIENTS", Double[].class, MESSAGES.getString("FLUX_COEFF_DESC"), new Double[0]);
   /**
    * 
    */
   @SuppressWarnings("unchecked")
-  Option<String[]> FLUX_OBJECTIVES = new Option<>("FLUX_OBJECTIVES", String[].class,
-    MESSAGES.getString("FLUX_OBJ_DESC"), new String[0]);
+  Option<String[]> FLUX_OBJECTIVES =
+    new Option<>("FLUX_OBJECTIVES", String[].class, MESSAGES.getString("FLUX_OBJ_DESC"), new String[0]);
   /**
    * Decides whether or not the output file should directly be compressed and if
    * so, which archive type should be used.
@@ -132,8 +137,7 @@ public interface ModelPolisherOptions extends KeyProvider {
    * This XHTML file defines alternative model notes and makes them
    * exchangeable.
    */
-  Option<File> MODEL_NOTES_FILE =
-    new Option<>("MODEL_NOTES_FILE", File.class, MESSAGES.getString("MODEL_NOTES_DESC"));
+  Option<File> MODEL_NOTES_FILE = new Option<>("MODEL_NOTES_FILE", File.class, MESSAGES.getString("MODEL_NOTES_DESC"));
   /**
    * This XHTML file defines alternative document notes and makes them
    * exchangeable.
@@ -146,8 +150,8 @@ public interface ModelPolisherOptions extends KeyProvider {
    * resulting output file.
    */
   @SuppressWarnings("unchecked")
-  Option<Boolean> OMIT_GENERIC_TERMS = new Option<>("OMIT_GENERIC_TERMS", Boolean.class,
-    MESSAGES.getString("OMIT_GENERIC_TERMS_DESC"), Boolean.FALSE);
+  Option<Boolean> OMIT_GENERIC_TERMS =
+    new Option<>("OMIT_GENERIC_TERMS", Boolean.class, MESSAGES.getString("OMIT_GENERIC_TERMS_DESC"), Boolean.FALSE);
   /**
    * Produce output as a single COMBINE Archive.
    */

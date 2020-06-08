@@ -1,6 +1,3 @@
-/**
- * 
- */
 package edu.ucsd.sbrg.bigg;
 
 import java.io.File;

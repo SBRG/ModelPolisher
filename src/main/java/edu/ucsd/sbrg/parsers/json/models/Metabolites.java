@@ -1,12 +1,12 @@
-package edu.ucsd.sbrg.parsers.models;
-
-import java.util.HashMap;
-import java.util.Map;
+package edu.ucsd.sbrg.parsers.json.models;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Metabolites {

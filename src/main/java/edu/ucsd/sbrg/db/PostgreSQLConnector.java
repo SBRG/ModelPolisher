@@ -1,17 +1,15 @@
 package edu.ucsd.sbrg.db;
 
-import static java.text.MessageFormat.format;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.sbml.jsbml.util.StringTools;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.StringJoiner;
 import java.util.logging.Logger;
 
-import org.sbml.jsbml.util.StringTools;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import static java.text.MessageFormat.format;
 
 /**
  * Created by mephenor on 05.05.17.
@@ -25,7 +23,7 @@ class PostgreSQLConnector {
   /**
    * 
    */
-  private HikariDataSource dataSource;
+  private final HikariDataSource dataSource;
 
   /**
    * @return

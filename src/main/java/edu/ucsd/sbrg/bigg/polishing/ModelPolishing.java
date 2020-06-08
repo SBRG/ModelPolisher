@@ -3,7 +3,6 @@ package edu.ucsd.sbrg.bigg.polishing;
 import de.zbit.util.ResourceManager;
 import de.zbit.util.progressbar.AbstractProgressBar;
 import edu.ucsd.sbrg.bigg.Parameters;
-import edu.ucsd.sbrg.bigg.SBMLPolisher;
 import edu.ucsd.sbrg.util.SBMLFix;
 import org.sbml.jsbml.InitialAssignment;
 import org.sbml.jsbml.Model;
@@ -32,7 +31,7 @@ public class ModelPolishing {
   /**
    * Bundle for ModelPolisher logger messages
    */
-  public static transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    *
    */

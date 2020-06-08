@@ -1,7 +1,11 @@
-package edu.ucsd.sbrg.parsers;
+package edu.ucsd.sbrg.parsers.json;
 
-import java.util.logging.Logger;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import edu.ucsd.sbrg.parsers.json.models.Gene;
+import edu.ucsd.sbrg.parsers.json.models.Metabolite;
+import edu.ucsd.sbrg.parsers.json.models.Metabolites;
 import org.sbml.jsbml.Parameter;
 import org.sbml.jsbml.Reaction;
 import org.sbml.jsbml.Species;
@@ -10,12 +14,7 @@ import org.sbml.jsbml.ext.fbc.FBCReactionPlugin;
 import org.sbml.jsbml.ext.fbc.FBCSpeciesPlugin;
 import org.sbml.jsbml.ext.fbc.GeneProduct;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
-import edu.ucsd.sbrg.parsers.models.Metabolite;
-import edu.ucsd.sbrg.parsers.models.Metabolites;
+import java.util.logging.Logger;
 
 public class JSONwriter {
 
@@ -25,7 +24,7 @@ public class JSONwriter {
    * @param g
    */
   public static void geneToJSON(GeneProduct g) {
-    edu.ucsd.sbrg.parsers.models.Gene gene = new edu.ucsd.sbrg.parsers.models.Gene();
+    Gene gene = new Gene();
     gene.setId(g.getId());
     gene.setName(g.getName());
     ObjectMapper mapper = new ObjectMapper();
@@ -43,7 +42,7 @@ public class JSONwriter {
    *        SBML Reaction
    */
   public static void reactionToJSON(Reaction r) {
-    edu.ucsd.sbrg.parsers.models.Reaction reaction = new edu.ucsd.sbrg.parsers.models.Reaction();
+    edu.ucsd.sbrg.parsers.json.models.Reaction reaction = new edu.ucsd.sbrg.parsers.json.models.Reaction();
     reaction.setId(r.getId());
     reaction.setName(r.getName());
     Metabolites metabolites = new Metabolites();

@@ -5,19 +5,23 @@ package edu.ucsd.sbrg.bigg;
 
 import de.zbit.io.filefilter.MultipleFileFilter;
 import de.zbit.io.filefilter.SBFileFilter;
+import de.zbit.util.ResourceManager;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.Range;
 
 import java.io.File;
-
-import static edu.ucsd.sbrg.bigg.ModelPolisher.MESSAGES;
+import java.util.ResourceBundle;
 
 /**
  * @author Andreas Dr&auml;ger
  */
 public interface IOOptions extends KeyProvider {
 
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * Specifies the SBML or MAT input file. If a directory is given, the
    * conversion

@@ -12,15 +12,11 @@
  * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
  * ---------------------------------------------------------------------
  */
-package edu.ucsd.sbrg.bigg;
+package edu.ucsd.sbrg.bigg.polishing;
 
 import de.zbit.util.ResourceManager;
 import de.zbit.util.progressbar.AbstractProgressBar;
 import de.zbit.util.progressbar.ProgressBar;
-import edu.ucsd.sbrg.bigg.polishing.CompartmentPolishing;
-import edu.ucsd.sbrg.bigg.polishing.ModelPolishing;
-import edu.ucsd.sbrg.bigg.polishing.ReactionPolishing;
-import edu.ucsd.sbrg.bigg.polishing.SpeciesPolishing;
 import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.ListOf;
@@ -53,7 +49,7 @@ public class SBMLPolisher {
   /**
    * Bundle for ModelPolisher logger messages
    */
-  public static transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    *
    */
