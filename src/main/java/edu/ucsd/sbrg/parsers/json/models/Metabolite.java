@@ -59,12 +59,15 @@ public class Metabolite {
 
 
   public void setCompartment(String compartment) {
-    Pattern validCompartmentCode = Pattern.compile("[a-z]{1,2}");
+    Pattern validCompartmentCode = Pattern.compile("(C_)?[a-z]{1,2}");
     if (validCompartmentCode.matcher(compartment).find()) {
+      if(compartment.startsWith("C_")){
+        compartment = compartment.substring(2);
+      }
       this.compartment = compartment;
     } else {
       logger.finest(format(
-        "Compartment code '{0}' in metabolite '{1}' did not match pattern [a-z]{1,2}, trying to extract from id after parsing",
+        "Compartment code '{0}' in metabolite '{1}' did not match pattern (C_)?[a-z]'{'1,2'}', trying to extract from id after parsing",
         compartment, id));
     }
   }

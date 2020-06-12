@@ -124,7 +124,7 @@ public class Parameters {
       return parameters;
     } else {
       // this should not happen, abort
-      throw new IllegalStateException("Parameters not initialized");
+      throw new IllegalStateException(MESSAGES.getString("PARAM_STATE_INVALID"));
     }
   }
 
@@ -136,12 +136,12 @@ public class Parameters {
   private void initParameters(SBProperties args) throws IllegalArgumentException {
     String inPath = args.getProperty(IOOptions.INPUT);
     if (inPath == null) {
-      throw new IllegalArgumentException("--input is missing, but needs to be provided, aborting.");
+      throw new IllegalArgumentException(MESSAGES.getString("PARAM_INPUT_MISSING"));
     }
     input = new File(inPath);
     String outPath = args.getProperty(IOOptions.OUTPUT);
     if (outPath == null) {
-      throw new IllegalArgumentException("--output is missing, but needs to be provided, aborting.");
+      throw new IllegalArgumentException(MESSAGES.getString("PARAM_OUTPUT_MISSING"));
     }
     output = new File(outPath);
     documentTitlePattern = args.getProperty(ModelPolisherOptions.DOCUMENT_TITLE_PATTERN);

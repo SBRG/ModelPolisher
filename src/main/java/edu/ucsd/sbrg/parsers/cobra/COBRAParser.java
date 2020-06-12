@@ -104,7 +104,7 @@ public class COBRAParser {
     }
     Struct modelStruct = matFile.getStruct(modelName);
     if (!Arrays.equals(modelStruct.getDimensions(), new int[] {1, 1})) {
-      logger.severe("Struct dimensions are wrong, aborting");
+      logger.severe("Model struct dimensions are wrong, aborting");
       return new SBMLDocument();
     }
     ModelBuilder builder = new ModelBuilder(3, 1);

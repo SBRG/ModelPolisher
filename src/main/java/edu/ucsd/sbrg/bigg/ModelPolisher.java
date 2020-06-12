@@ -1,44 +1,7 @@
-/*
- * 
- */
 package edu.ucsd.sbrg.bigg;
 
-import de.zbit.AppConf;
-import de.zbit.Launcher;
-import de.zbit.io.FileTools;
-import de.zbit.io.ZIPUtils;
-import de.zbit.io.filefilter.SBFileFilter;
-import de.zbit.util.ResourceManager;
-import de.zbit.util.Utils;
-import de.zbit.util.logging.LogOptions;
-import de.zbit.util.prefs.KeyProvider;
-import de.zbit.util.prefs.SBProperties;
-import edu.ucsd.sbrg.bigg.ModelPolisherOptions.Compression;
-import edu.ucsd.sbrg.bigg.annotation.BiGGAnnotation;
-import edu.ucsd.sbrg.bigg.polishing.SBMLPolisher;
-import edu.ucsd.sbrg.db.ADBOptions;
-import edu.ucsd.sbrg.db.AnnotateDB;
-import edu.ucsd.sbrg.db.BiGGDB;
-import edu.ucsd.sbrg.db.BiGGDBOptions;
-import edu.ucsd.sbrg.db.DBConfig;
-import edu.ucsd.sbrg.parsers.cobra.COBRAParser;
-import edu.ucsd.sbrg.parsers.json.JSONParser;
-import edu.ucsd.sbrg.util.CombineArchive;
-import edu.ucsd.sbrg.util.GPRParser;
-import edu.ucsd.sbrg.util.SBMLUtils;
-import edu.ucsd.sbrg.util.UpdateListener;
-import org.sbml.jsbml.SBMLDocument;
-import org.sbml.jsbml.SBMLError;
-import org.sbml.jsbml.SBMLErrorLog;
-import org.sbml.jsbml.SBMLReader;
-import org.sbml.jsbml.TidySBMLWriter;
-import org.sbml.jsbml.ext.fbc.converters.CobraToFbcV2Converter;
-import org.sbml.jsbml.util.SBMLtools;
-import org.sbml.jsbml.util.ValuePair;
-import org.sbml.jsbml.validator.SBMLValidator;
-import org.sbml.jsbml.validator.offline.LoggingValidationContext;
+import static java.text.MessageFormat.format;
 
-import javax.xml.stream.XMLStreamException;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -65,7 +28,43 @@ import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static java.text.MessageFormat.format;
+import javax.xml.stream.XMLStreamException;
+
+import org.sbml.jsbml.SBMLDocument;
+import org.sbml.jsbml.SBMLError;
+import org.sbml.jsbml.SBMLErrorLog;
+import org.sbml.jsbml.SBMLReader;
+import org.sbml.jsbml.TidySBMLWriter;
+import org.sbml.jsbml.ext.fbc.converters.CobraToFbcV2Converter;
+import org.sbml.jsbml.util.SBMLtools;
+import org.sbml.jsbml.util.ValuePair;
+import org.sbml.jsbml.validator.SBMLValidator;
+import org.sbml.jsbml.validator.offline.LoggingValidationContext;
+
+import de.zbit.AppConf;
+import de.zbit.Launcher;
+import de.zbit.io.FileTools;
+import de.zbit.io.ZIPUtils;
+import de.zbit.io.filefilter.SBFileFilter;
+import de.zbit.util.ResourceManager;
+import de.zbit.util.Utils;
+import de.zbit.util.logging.LogOptions;
+import de.zbit.util.prefs.KeyProvider;
+import de.zbit.util.prefs.SBProperties;
+import edu.ucsd.sbrg.bigg.ModelPolisherOptions.Compression;
+import edu.ucsd.sbrg.bigg.annotation.BiGGAnnotation;
+import edu.ucsd.sbrg.bigg.polishing.SBMLPolisher;
+import edu.ucsd.sbrg.db.ADBOptions;
+import edu.ucsd.sbrg.db.AnnotateDB;
+import edu.ucsd.sbrg.db.BiGGDB;
+import edu.ucsd.sbrg.db.BiGGDBOptions;
+import edu.ucsd.sbrg.db.DBConfig;
+import edu.ucsd.sbrg.parsers.cobra.COBRAParser;
+import edu.ucsd.sbrg.parsers.json.JSONParser;
+import edu.ucsd.sbrg.util.CombineArchive;
+import edu.ucsd.sbrg.util.GPRParser;
+import edu.ucsd.sbrg.util.SBMLUtils;
+import edu.ucsd.sbrg.util.UpdateListener;
 
 /**
  * @author Andreas Dr&auml;ger
@@ -286,7 +285,7 @@ public class ModelPolisher extends Launcher {
       fileType = getFileType(input);
       // did not fix the issue, abort
       if (fileType.equals(FileType.UNKNOWN)) {
-        logger.warning(format("Encountered file of unknown type in input : \"{0}\", skipping.", input.getPath()));
+        logger.warning(format(MESSAGES.getString("INPUT_UNKNOWN"), input.getPath()));
         return;
       }
     }
@@ -410,8 +409,8 @@ public class ModelPolisher extends Launcher {
    * @throws XMLStreamException
    */
   private void polish(SBMLDocument doc, File output) throws IOException, XMLStreamException {
-    if(doc.getModel() == null){
-      logger.severe("No model present in SBML Document, aborting");
+    if (doc.getModel() == null) {
+      logger.severe(MESSAGES.getString("MODEL_MISSING"));
       return;
     }
     doc = checkLevelAndVersion(doc);
@@ -447,7 +446,7 @@ public class ModelPolisher extends Launcher {
         break;
       }
       if (!output.delete()) {
-        logger.warning(format("Failed to delete output file '{0}' after compression.", output.getAbsolutePath()));
+        logger.warning(format(MESSAGES.getString("REMOVE_ZIP_INPUT_FAIL"), output.getAbsolutePath()));
       }
       if (parameters.SBMLValidation()) {
         validate(archive, false);
@@ -477,7 +476,7 @@ public class ModelPolisher extends Launcher {
    */
   private void validate(String filename, boolean online) {
     if (online) {
-      logger.info(format("Validating '{0}' using online validator.", filename));
+      logger.info(format(MESSAGES.getString("VAL_ONLINE"), filename));
       String output = "xml";
       String offcheck = "p,u";
       Map<String, String> parameters = new HashMap<>();
@@ -487,7 +486,7 @@ public class ModelPolisher extends Launcher {
       SBMLErrorLog sbmlErrorLog = SBMLValidator.checkConsistency(filename, parameters);
       handleErrorLog(sbmlErrorLog, filename);
     } else {
-      logger.info(format("Validating '{0}' using offline validator.", filename));
+      logger.info(format(MESSAGES.getString("VAL_OFFLINE"), filename));
       SBMLDocument doc = null;
       try {
         InputStream istream;
@@ -507,7 +506,7 @@ public class ModelPolisher extends Launcher {
         SBMLErrorLog sbmlErrorLog = context.getErrorLog();
         handleErrorLog(sbmlErrorLog, filename);
       } else {
-        logger.severe(format("Failed reading file '{0}' for offline validation.", filename));
+        logger.severe(format(MESSAGES.getString("VAL_OFFLINE_FAIL"), filename));
       }
     }
   }

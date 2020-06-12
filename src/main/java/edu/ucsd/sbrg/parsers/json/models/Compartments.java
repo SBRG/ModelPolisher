@@ -23,11 +23,14 @@ public class Compartments {
     if (key.isEmpty()) {
       return;
     }
-    Pattern validCompartmentCode = Pattern.compile("[a-z]{1,2}");
+    Pattern validCompartmentCode = Pattern.compile("(C_)?[a-z]{1,2}");
     if (validCompartmentCode.matcher(key).find()) {
+      if(key.startsWith("C_")){
+        key = key.substring(2);
+      }
       compartments.put(key, value);
     } else {
-      logger.warning(format("Compartment code '{0}' did not match required pattern [a-z]{1,2}", key));
+      logger.warning(format("Compartment code '{0}' did not match required pattern (C_)?[a-z]'{'1,2'}'", key));
     }
   }
 

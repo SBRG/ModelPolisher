@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class Miriam {
 
-  private static Miriam miriam = new Miriam();
+  private static final Miriam miriam = new Miriam();
   private static Map<String, Namespace> namespaces;
 
   private Miriam() {

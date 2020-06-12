@@ -81,11 +81,9 @@ public class ReactionPolishing {
     if (id.isEmpty()) {
       // remove species with missing id, produces invalid SBML
       if (reaction.isSetName()) {
-        logger.severe(format(
-          "Removing reaction '{0}' due to missing id. Check your Model for entries missing the id attribute or duplicates.",
-          reaction.getName()));
+        logger.severe(format(MESSAGES.getString("REACTION_MISSING_ID"), reaction.getName()));
       } else {
-        logger.severe("Removing reaction with missing id and name. Check your Model for reaction without id and name.");
+        logger.severe(MESSAGES.getString("REACTION_MISSING_ID_NAME"));
       }
       reaction.getModel().removeReaction(reaction);
       return false;

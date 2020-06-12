@@ -1,5 +1,6 @@
 package edu.ucsd.sbrg.bigg.annotation;
 
+import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.bigg.Parameters;
 import edu.ucsd.sbrg.db.AnnotateDB;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,11 @@ import static edu.ucsd.sbrg.db.AnnotateDBContract.Constants.BIGG_REACTION;
 import static java.text.MessageFormat.format;
 
 public abstract class CVTermAnnotation {
+
+  /**
+   * Localization support.
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
 
   abstract void annotate();
 
@@ -46,9 +53,7 @@ public abstract class CVTermAnnotation {
    */
   void addAnnotations(SBase node, BiGGId biggId) throws IllegalArgumentException {
     if (!(node instanceof Species) && !(node instanceof Reaction)) {
-      throw new IllegalArgumentException(
-        format("Argument passed should be of type org.sbml.jsbml.Species or org.sbml.jsbml.Reaction, but was {0}",
-          node.getClass().getName()));
+      throw new IllegalArgumentException(format(MESSAGES.getString("ANNOTATION_WRONG_SBASE"), node.getClass().getName()));
     }
     // Fetch annotations already present on the SBase
     CVTerm cvTerm = null;

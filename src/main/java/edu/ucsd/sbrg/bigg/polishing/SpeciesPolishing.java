@@ -41,15 +41,13 @@ public class SpeciesPolishing {
     if (id.isEmpty()) {
       // remove species with missing id, produces invalid SBML
       if (species.isSetName()) {
-        logger.severe(format(
-          "Marked species '{0}' for removal due to missing id. Check your Model for entries missing the id attribute or duplicates.",
-          species.getName()));
+        logger.severe(format(MESSAGES.getString("SPECIES_MISSING_ID"), species.getName()));
       } else {
-        logger.severe("Marked species with missing id and name for removal. Check your Model for species without id and name.");
+        logger.severe(MESSAGES.getString("SPECIES_MISSING_ID_NAME"));
       }
       return Optional.of(species);
     }
-    //TODO: this is likely not correct, something should be done with this species id
+    // TODO: this is likely not correct, something should be done with this species id
     if (species.getId().endsWith("_boundary")) {
       logger.warning(format(MESSAGES.getString("SPECIES_ID_INVALID"), id));
       if (!species.isSetBoundaryCondition() || !species.isBoundaryCondition()) {
@@ -105,7 +103,7 @@ public class SpeciesPolishing {
     String cId = species.getCompartment();
     Model model = species.getModel();
     // We could polish a species without model
-    if(model == null){
+    if (model == null) {
       return;
     }
     SBase candidate = model.findUniqueNamedSBase(cId);

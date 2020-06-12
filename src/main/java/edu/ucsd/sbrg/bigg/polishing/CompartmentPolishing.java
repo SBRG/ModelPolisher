@@ -1,17 +1,25 @@
 package edu.ucsd.sbrg.bigg.polishing;
 
+import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import org.sbml.jsbml.Compartment;
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.Unit;
 
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
 import static java.text.MessageFormat.format;
 
 public class CompartmentPolishing {
-
+  /**
+   * A {@link Logger} for this class.
+   */
   private final static transient Logger logger = Logger.getLogger(CompartmentPolishing.class.getName());
+  /**
+   * Localization support.
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   private final Compartment compartment;
 
   public CompartmentPolishing(Compartment compartment) {
@@ -28,7 +36,7 @@ public class CompartmentPolishing {
     } else {
       // remove C_ prefix of compartment code, not in BiGGId specification
       BiGGId.extractCompartmentCode(compartment.getId()).ifPresentOrElse(compartment::setId,
-        () -> logger.warning(format("CompartmentCode '{0}' is not BiGGId conform.", compartment.getId())));
+        () -> logger.warning(format(MESSAGES.getString("COMPARTMENT_CODE_WRONG_FORMAT"), compartment.getId())));
     }
     compartment.setSBOTerm(410); // implicit compartment
     if (!compartment.isSetName()) {

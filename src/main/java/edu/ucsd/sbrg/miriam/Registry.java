@@ -333,7 +333,7 @@ public class Registry {
       resource = fixGO(resource, identifier);
     } else if (resource.contains("hmdb") && identifier.startsWith("/")) {
       resource = replace(resource, identifier, identifier.substring(1));
-      logger.severe(format("Changed identifier '{0}' to '{1}'", identifier, identifier.substring(1)));
+      logger.severe(format("Changed identifier {0} to {1}", identifier, identifier.substring(1)));
     } else if (resource.contains("kegg")) {
       // We can correct the kegg collection
       resource = fixKEGGCollection(resource, identifier);

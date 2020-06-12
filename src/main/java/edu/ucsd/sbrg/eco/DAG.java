@@ -20,9 +20,7 @@ public class DAG {
   public void traverse(Node node, int counter, StringBuilder sb) {
     counter++;
     sb.append("|");
-    for (int i = 0; i < counter; i++) {
-      sb.append("-");
-    }
+    sb.append("-".repeat(Math.max(0, counter)));
     sb.append("|").append(node.getTerm().getName()).append("\n");
     for (Node child : node.getChildren()) {
       traverse(child, counter, sb);

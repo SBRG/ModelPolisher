@@ -1,5 +1,6 @@
 package edu.ucsd.sbrg.bigg.annotation;
 
+import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.bigg.Parameters;
 import edu.ucsd.sbrg.bigg.polishing.SBMLPolisher;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -32,10 +34,18 @@ public class ReactionAnnotation extends CVTermAnnotation {
    */
   static final transient Logger logger = Logger.getLogger(ReactionAnnotation.class.getName());
   /**
+   * Localization support.
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
+  /**
    * Instance of reaction to annotate
    */
   private final Reaction reaction;
+  private static boolean triggeredSubsystemWarning = false;
 
+  /**
+   * @param reaction
+   */
   public ReactionAnnotation(Reaction reaction) {
     this.reaction = reaction;
   }
@@ -151,8 +161,10 @@ public class ReactionAnnotation extends CVTermAnnotation {
     if (isBiGGModel) {
       subsystems = BiGGDB.getSubsystems(model.getId(), biggId.getAbbreviation());
     } else {
-      logger.warning(
-        "Retrieving subsystem information for model with id not present in BiGG. Please validate obtained results");
+      if (!triggeredSubsystemWarning) {
+        triggeredSubsystemWarning = true;
+        logger.warning(MESSAGES.getString("SUBSYSTEM_MODEL_NOT_BIGG"));
+      }
       subsystems = BiGGDB.getSubsystemsForReaction(biggId.getAbbreviation());
     }
     if (subsystems.size() < 1) {

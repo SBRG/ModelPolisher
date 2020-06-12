@@ -14,29 +14,9 @@
  */
 package edu.ucsd.sbrg.db;
 
-import de.zbit.util.ResourceManager;
-import de.zbit.util.Utils;
-import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.Registry;
-import org.sbml.jsbml.util.Pair;
-
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
+import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.ACCESSION_VALUE;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.BIGG_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.CHARGE;
@@ -63,9 +43,6 @@ import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.SUBSYSTEM;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.SYNONYM_COL;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.TAXON_ID;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Column.TYPE;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_GENE_PRODUCT;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_REACTION;
-import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.TYPE_SPECIES;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPARTMENT;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPARTMENTALIZED_COMPONENT;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.COMPONENT;
@@ -88,6 +65,30 @@ import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.URL;
 import static edu.ucsd.sbrg.db.BiGGDBContract.Constants.Table.URL_PREFIX;
 import static java.text.MessageFormat.format;
 import static org.sbml.jsbml.util.Pair.pairOf;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import org.sbml.jsbml.util.Pair;
+
+import de.zbit.util.ResourceManager;
+import de.zbit.util.Utils;
+import edu.ucsd.sbrg.bigg.BiGGId;
+import edu.ucsd.sbrg.miriam.Registry;
 
 /**
  * @author Andreas Dr&auml;ger
@@ -233,8 +234,7 @@ public class BiGGDB {
       return Optional.of(results.iterator().next());
     } else {
       if (results.size() > 1) {
-        logger.info(format("Could not retrieve unique chemical formula for component '{0}' and compartment '{1}'",
-          componentId, compartmentId));
+        logger.info(format(MESSAGES.getString("FORMULA_COMPARTMENT_AMBIGUOUS"), componentId, compartmentId));
       }
       return Optional.empty();
     }
@@ -284,8 +284,7 @@ public class BiGGDB {
       return Optional.of(results.iterator().next());
     } else {
       if (results.size() > 1) {
-        logger.info(format("Could not retrieve unique chemical formula for component '{0}' and model '{1}'",
-          componentId, modelId));
+        logger.info(format(MESSAGES.getString("FORMULA_MODEL_AMBIGUOUS"), componentId, modelId));
       }
       return Optional.empty();
     }
@@ -327,7 +326,7 @@ public class BiGGDB {
       return Optional.of(results.iterator().next());
     } else {
       if (results.size() > 1) {
-        logger.severe(format("Query returned multiple results for parameter {0}\nQuery:\n{1}", param, query));
+        logger.severe(format(MESSAGES.getString("QUERY_MULTIPLE_RESULTS"), param, query));
       }
       return Optional.empty();
     }
@@ -556,7 +555,7 @@ public class BiGGDB {
       ResultSet resultSet = pStatement.executeQuery();
       while (resultSet.next()) {
         if (result != null) {
-          logger.severe(format("Taxon id query returned multiple results for abbreviation: {0}", abbreviation));
+          logger.severe(format(MESSAGES.getString("QUERY_TAXON_MULTIPLE_RESULTS"), abbreviation));
         } else {
           result = resultSet.getInt(1);
         }
@@ -592,7 +591,7 @@ public class BiGGDB {
       pStatement.close();
       connection.close();
     } catch (SQLException e) {
-      logger.warning(format("Could not retrieve genome accession for model id {0}.", id));
+      logger.warning(format(MESSAGES.getString("GENOME_ACCESSION_FAIL"), id));
     }
     // Will be non empty, as query always returns exactly one result
     return result;
@@ -616,7 +615,7 @@ public class BiGGDB {
       pStatement.close();
       connection.close();
     } catch (SQLException exc) {
-      logger.warning(format("Failed to fetch BiGGIDs for table '{0}': '{1}'", table, Utils.getMessage(exc)));
+      logger.warning(format(MESSAGES.getString("BIGGID_FOR_TABLE_FAIL"), table, Utils.getMessage(exc)));
     }
     return biggIds;
   }
@@ -639,8 +638,7 @@ public class BiGGDB {
       return Optional.of(Integer.parseInt(results.iterator().next()));
     } else {
       if (results.size() > 1) {
-        logger.warning(format("Could not retrieve unique charge for component '{0}' and compartment '{1}'", componentId,
-          compartmentId));
+        logger.warning(format(MESSAGES.getString("CHARGE_NOT_UNIQUE_COMPARTMENT"), componentId, compartmentId));
       }
       return Optional.empty();
     }
@@ -690,8 +688,7 @@ public class BiGGDB {
       return Optional.of(Integer.parseInt(results.iterator().next()));
     } else {
       if (results.size() > 1) {
-        logger.warning(
-          format("Could not retrieve unique charge for component '{0}' and compartment '{1}'", componentId, modelId));
+        logger.warning(format(MESSAGES.getString("CHARGE_NOT_UNIQUE_MODEL"), componentId, modelId));
       }
       return Optional.empty();
     }

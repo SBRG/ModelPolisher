@@ -1,6 +1,9 @@
 package edu.ucsd.sbrg.bigg;
 
+import de.zbit.util.ResourceManager;
+
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +27,10 @@ public class BiGGId {
    * A {@link Logger} for this class.
    */
   private static final transient Logger logger = Logger.getLogger(BiGGId.class.getName());
+  /**
+   * Bundle for ModelPolisher logger messages
+   */
+  private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
   /**
    * First part of BiGG ID, either R, M or G
    */
@@ -323,7 +330,7 @@ public class BiGGId {
     } else if (compartmentMatcher.matches()) {
       setAbbreviation(id);
     } else {
-      logger.warning(format("Cannot convert to BiGGId, setting as abbreviation: {0}", id));
+      logger.warning(format(MESSAGES.getString("BIGGID_CONVERSION_FAIL"), id));
       setAbbreviation(id);
     }
   }
