@@ -1,17 +1,7 @@
 package edu.ucsd.sbrg.parsers.cobra;
 
-import de.zbit.sbml.util.SBMLtools;
-import de.zbit.util.ResourceManager;
-import org.sbml.jsbml.Model;
-import us.hebi.matlab.mat.types.Array;
-import us.hebi.matlab.mat.types.Cell;
-import us.hebi.matlab.mat.types.Char;
-import us.hebi.matlab.mat.types.MatlabType;
-import us.hebi.matlab.mat.types.Matrix;
-import us.hebi.matlab.mat.types.Sparse;
-import us.hebi.matlab.mat.types.Struct;
+import static java.text.MessageFormat.format;
 
-import javax.xml.stream.XMLStreamException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +12,19 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static java.text.MessageFormat.format;
+import javax.xml.stream.XMLStreamException;
+
+import org.sbml.jsbml.Model;
+
+import de.zbit.sbml.util.SBMLtools;
+import de.zbit.util.ResourceManager;
+import us.hebi.matlab.mat.types.Array;
+import us.hebi.matlab.mat.types.Cell;
+import us.hebi.matlab.mat.types.Char;
+import us.hebi.matlab.mat.types.MatlabType;
+import us.hebi.matlab.mat.types.Matrix;
+import us.hebi.matlab.mat.types.Sparse;
+import us.hebi.matlab.mat.types.Struct;
 
 /**
  *
@@ -63,9 +65,9 @@ class MatlabFields {
   private void initializeFields(Struct struct) {
     List<String> knownFields = Arrays.stream(ModelField.values()).map(Enum::name).collect(Collectors.toList());
     List<String> fieldsFound = struct.getFieldNames();
-    logger.info(format("Known fields missing in this model: {0}",
+    logger.info(format(MESSAGES.getString("KNOWN_FIELDS_MISSING"),
       knownFields.parallelStream().filter(Predicate.not(fieldsFound::contains)).collect(Collectors.toSet())));
-    logger.info(format("Found additional, unknown fields: {0}",
+    logger.info(format(MESSAGES.getString("ADDITIONAL_FIELDS_PRESENT"),
       fieldsFound.parallelStream().filter(Predicate.not(knownFields::contains)).collect(Collectors.toSet())));
     for (String field : fieldsFound) {
       fields.put(field, struct.get(field));

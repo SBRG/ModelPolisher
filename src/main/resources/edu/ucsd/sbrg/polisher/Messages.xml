@@ -12,6 +12,7 @@
     <entry key="ADDED_UNIT_DEF">Added basic mmol_per_gDW_per_hr unit definition to model</entry>
     <entry key="ADDED_URI">Added resource {0}</entry>
     <entry key="ADDED_URI_COBRA">Added resource URI {0} to provided CVTerm</entry>
+    <entry key="ADDITIONAL_FIELDS_PRESENT">Found additional, unknown fields: {0}</entry>
     <entry key="ALL_DOCS_PARSE_ERROR">Could not parse any model from input file {0}, aborting.</entry>
     <entry key="ANNOTATE_WITH_BIGG_DESC">If set to true, the model will be annotated with data from BiGG Models database. If set to false, the resulting model will not receive annotation or correction from BiGG Models database</entry>
     <entry key="ANNOTATION_MISSING">There is no annotation for this model</entry>
@@ -62,6 +63,9 @@
     <entry key="DISPLAY_CONF_SCORE">Reaction {1} has confidence score {0,number,##}.</entry>
     <entry key="DOC_NOTES_DESC">This XHTML file defines alternative document notes and makes them exchangeable.</entry>
     <entry key="DOC_TITLE_PATTERN_DESC">This option allows you to define the title of the SBML document's description and hence the head line when the file is displayed in a web browser.</entry>
+    <entry key="DUPLICATE_GENE_ID">Skipping duplicate gene with id: {0}</entry>
+    <entry key="DUPLICATE_REACTION_ID">Skipping duplicate reaction with id: {0}</entry>
+    <entry key="DUPLICATE_SPECIES_ID">Skipping duplicate species with id: {0}</entry>
     <entry key="EC_CHANGE_FAILED">Could not correct ec-code {0}</entry>
     <entry key="EC_CODES_UNKNOWN">Could not recognize any of the EC codes from {0}.</entry>
     <entry key="FAILED_WRITE_NOTES">Could not append document and model notes.</entry>
@@ -91,11 +95,14 @@
     <entry key="INCLUDE_ANY_URI_DESC">This switch allows users to specify if also those database cross-links should be extracted from BiGG Models database for which currently no entry in the MIRIAM exists. If set to true, ModelPolisher also includes URIs that do not contain the pattern identifiers.org.</entry>
     <entry key="INPUT_DESC">SBML, MAT or JSON files, or directories</entry>
     <entry key="INPUT_UNKNOWN">Encountered file of unknown type in input : {0}, skipping.</entry>
+    <entry key="INVALID_COMPARTMENT_CODE">Invalid compartment code {0}, skipping.</entry>
+    <entry key="INVALID_SPECIES_FORMULA">Invalid formula for metabolite {0} : {1}. Setting in notes</entry>
     <entry key="IS_COMPARTMENT_FAILED">Could not determine if {0} is a compartment or not: {1}.</entry>
     <entry key="IS_METABOLITE_FAILED">Could not determine if {0} is a metabolite or not: {1}.</entry>
     <entry key="IS_MODEL_FAILED">Could not determine if {0} is a model or not: {1}.</entry>
     <entry key="IS_REACTION_FAILED">Could not determine if {0} is a reaction or not: {1}.</entry>
     <entry key="JSON_PARSER_STARTED">Started JSONparser</entry>
+    <entry key="KNOWN_FIELDS_MISSING">Known fields missing in this model: {0}</entry>
     <entry key="MANY_IDS_IN_DESC">Found more than one identifier in cell {0}</entry>
     <entry key="MANY_STRINGS_IN_CELL">Found more than one string in cell {0}</entry>
     <entry key="MERGING_MIRIAM_RESOURCES">Merging all resources with identical MIRIAM qualifier {0} in {1} with id={2}.</entry>
@@ -122,6 +129,10 @@
     <entry key="OBJ_NOT_DEFINED">No active objective defined in model {0}.</entry>
     <entry key="OBJ_SOLUTION">The problem could be successfully solved by declaring {0} the active objective.</entry>
     <entry key="OMIT_GENERIC_TERMS_DESC">Set this option to true if generic top-level annotations, such as 'process' should not be applied. Not using those terms will reduce the size of the resulting output file.</entry>
+    <entry key="OPEN_ISSUE_ANNOTATION">Please open an issue to see annotation format {0} implemented.</entry>
+    <entry key="OPEN_ISSUE_ID_FORMAT">Please open an issue to see parsing for id format {0} implemented.</entry>
+    <entry key="OPEN_ISSUE_NOTES_FORMAT">Please open an issue to see notes format {0} implemented.</entry>
+    <entry key="OPEN_ISSUE_NOTES_CONTENT">Please open an issue to see parsing for notes content format {0} implemented.</entry>
     <entry key="OUTPUT_COMBINE">Produce output as a single COMBINE Archive including polished model and glossary rdf file. NOTE: Output file name is taken from input to option --output.</entry>
     <entry key="OUTPUT_DESC">Output SBML file</entry>
     <entry key="OUTPUT_FILE_DESC">Output is {0}.</entry>
