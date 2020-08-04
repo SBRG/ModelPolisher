@@ -109,6 +109,13 @@ public class ModelPolisher extends Launcher {
    *        Commandline arguments passed, use help flag to obtain usage information
    */
   public static void main(String[] args) {
+    // Workaround for docker container
+    String home = System.getenv("HOME");
+    // / should only be home if system user has no corresponding home folder
+    if ("/".equals(home)) {
+      System.setProperty("java.util.prefs.systemRoot", ".java");
+      System.setProperty("java.util.prefs.userRoot", ".java/.userPrefs");
+    }
     new ModelPolisher(args);
   }
 
