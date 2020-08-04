@@ -4,7 +4,7 @@ import org.biojava.nbio.ontology.Term;
 
 public class DAG {
 
-  private Node root;
+  private final Node root;
 
 
   DAG(Term term) {

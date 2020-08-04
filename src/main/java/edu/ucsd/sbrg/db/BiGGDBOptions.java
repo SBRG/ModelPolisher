@@ -1,6 +1,3 @@
-/**
- * 
- */
 package edu.ucsd.sbrg.db;
 
 import de.zbit.util.prefs.KeyProvider;

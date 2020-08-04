@@ -15,7 +15,6 @@ import org.biojava.nbio.ontology.io.OboParser;
 public class ECOparser {
 
   private static Ontology ontology;
-  private static DAG ontologyDAG;
 
   /**
    * @see <a href="https://github.com/draeger-lab/ModelPolisher/issues/5">Issue 5</>
@@ -27,8 +26,8 @@ public class ECOparser {
     PHYSIOLOGICAL("ECO:0005551", 3),
     MODELING("0000001", 4);
 
-    private String ECOTerm;
-    private int confidenceScore;
+    private final String ECOTerm;
+    private final int confidenceScore;
 
 
     ConfidenceScoreTerm(String ECOTerm, int confidenceScore) {
@@ -91,7 +90,7 @@ public class ECOparser {
         BufferedReader oboReader = new BufferedReader(new InputStreamReader(inputStream))) {
       ontology = parser.parseOBO(oboReader, ecoName, ecoDesc);
       Term rootTerm = ontology.getTerm("ECO:0000000");
-      ontologyDAG = new DAG(rootTerm);
+      DAG ontologyDAG = new DAG(rootTerm);
       traverse(ontologyDAG.getRoot());
     } catch (IOException | ParseException e) {
       e.printStackTrace();

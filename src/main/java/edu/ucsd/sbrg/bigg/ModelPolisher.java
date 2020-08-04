@@ -387,7 +387,7 @@ public class ModelPolisher extends Launcher {
   private void checkHTMLTags(File input) {
     // Replace tags and replace file for processing
     try (FileInputStream iStream = new FileInputStream(input);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(iStream));) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(iStream))) {
       StringBuilder sb = new StringBuilder();
       String line;
       while ((line = reader.readLine()) != null) {
