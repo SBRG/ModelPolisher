@@ -14,10 +14,13 @@
  */
 package edu.ucsd.sbrg.bigg.polishing;
 
-import de.zbit.util.ResourceManager;
-import de.zbit.util.progressbar.AbstractProgressBar;
-import de.zbit.util.progressbar.ProgressBar;
-import edu.ucsd.sbrg.miriam.Registry;
+import static java.text.MessageFormat.format;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.logging.Logger;
+
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.ListOf;
 import org.sbml.jsbml.Model;
@@ -30,12 +33,10 @@ import org.sbml.jsbml.ext.fbc.FBCConstants;
 import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
 import org.sbml.jsbml.util.ModelBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.logging.Logger;
-
-import static java.text.MessageFormat.format;
+import de.zbit.util.ResourceManager;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
+import edu.ucsd.sbrg.miriam.Registry;
 
 /**
  * @author Andreas Dr&auml;ger
@@ -63,7 +64,7 @@ public class SBMLPolisher {
 
 
   /**
-   * Entrypoint for #ModelPolisher class
+   * Entry point from #ModelPolisher class
    * 
    * @param doc:
    *        SBMLDocument containing the model to polish
@@ -112,14 +113,18 @@ public class SBMLPolisher {
 
 
   /**
+   * Check that all basic {@link UnitDefinition}s and {@link Unit}s exist and creates them, if not
+   *
    * @param model
+   *        {@link Model} to polish
    */
   public void polishListOfUnitDefinitions(Model model) {
     progress.DisplayBar("Polishing Unit Definitions (2/9)  "); // "Processing unit definitions");
     int udCount = model.getUnitDefinitionCount();
     ListOf<UnitDefinition> unitDefinitions = model.getListOfUnitDefinitions();
     UnitDefinition mmol_per_gDW_per_hr = setBasicUnitDefinition(model);
-    UnitDefinition substanceUnits = setUnits(model, unitDefinitions);
+    setUnits(model, unitDefinitions);
+    UnitDefinition substanceUnits = model.getSubstanceUnitsInstance();
     boolean substanceExists = true;
     if (substanceUnits == null) {
       substanceUnits = model.createUnitDefinition(UnitDefinition.SUBSTANCE);
@@ -173,8 +178,11 @@ public class SBMLPolisher {
 
 
   /**
+   * Adds basic unit definitions to model, if not present
+   *
    * @param model
-   * @return
+   *        {@link Model} to polish
+   * @return Millimoles per gram (dry weight) per hour {@link UnitDefinition}
    */
   private UnitDefinition setBasicUnitDefinition(Model model) {
     UnitDefinition mmol_per_gDW_per_hr = model.getUnitDefinition("mmol_per_gDW_per_hr");
@@ -200,15 +208,17 @@ public class SBMLPolisher {
 
 
   /**
+   * Sets substance, volume and time units for model, if not set
+   *
    * @param model
+   *        {@link Model} to polish
    * @param unitDefinitions
-   * @return
+   *        {@link ListOf} {@link UnitDefinition}s to check
    */
-  private UnitDefinition setUnits(Model model, ListOf<UnitDefinition> unitDefinitions) {
+  private void setUnits(Model model, ListOf<UnitDefinition> unitDefinitions) {
     UnitDefinition substanceUnits = model.getSubstanceUnitsInstance();
     if (substanceUnits == null && unitDefinitions.get("substance") != null) {
       model.setSubstanceUnits(UnitDefinition.SUBSTANCE);
-      substanceUnits = model.getSubstanceUnitsInstance();
     }
     UnitDefinition volumeUnits = model.getVolumeUnitsInstance();
     if (volumeUnits == null && unitDefinitions.get("volume") != null) {
@@ -218,7 +228,6 @@ public class SBMLPolisher {
     if (timeUnits == null && unitDefinitions.get("time") != null) {
       model.setTimeUnits(UnitDefinition.TIME);
     }
-    return substanceUnits;
   }
 
 

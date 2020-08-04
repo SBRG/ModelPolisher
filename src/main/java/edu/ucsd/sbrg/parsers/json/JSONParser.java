@@ -104,7 +104,7 @@ public class JSONParser {
     // Has to be present
     String modelId = root.getId();
     // Set model name to id, if name is not provided
-    String modelName = Optional.ofNullable(root.getName()).orElse(modelId);
+    String modelName = root.getName() != null ? root.getName() : modelId;
     builder.buildModel(modelId, modelName);
     Model model = builder.getModel();
     model.setId(modelId);
@@ -153,7 +153,7 @@ public class JSONParser {
    */
   @SuppressWarnings("unchecked")
   public void parseAnnotation(SBase node, Object annotation) {
-    if (Optional.ofNullable(annotation).orElse("").equals("")) {
+    if (annotation == null || annotation.equals("")) {
       return;
     }
     Set<String> annotations = new HashSet<>();
@@ -219,7 +219,7 @@ public class JSONParser {
   @SuppressWarnings("unchecked")
   public void parseNotes(SBase node, Object notes) {
     Set<String> content = new HashSet<>();
-    if (Optional.ofNullable(notes).orElse("").equals("")) {
+    if (notes == null || notes.equals("")) {
       return;
     }
     if (notes instanceof LinkedHashMap) {
@@ -282,10 +282,15 @@ public class JSONParser {
     Model model = builder.getModel();
     for (Map.Entry<String, String> compartment : compartments.entrySet()) {
       BiGGId.extractCompartmentCode(compartment.getKey()).ifPresentOrElse(compartmentCode -> {
-        if (model.getCompartment(compartmentCode) == null) {
-          Compartment comp = model.createCompartment();
+        Compartment comp = model.getCompartment(compartmentCode);
+        if (comp == null) {
+          comp = model.createCompartment();
           comp.setId(compartmentCode);
           comp.setName(compartment.getValue());
+        } else {
+          if (!comp.isSetName()) {
+            comp.setName(compartment.getValue());
+          }
         }
       }, () -> logger.info(format(MESSAGES.getString("INVALID_COMPARTMENT_CODE"), compartment.getKey())));
     }
@@ -324,7 +329,7 @@ public class JSONParser {
       name = biggId.toBiGGId();
     }
     species.setName(name);
-    String formula = Optional.ofNullable(metabolite.getFormula()).orElse("");
+    String formula = metabolite.getFormula() != null ? metabolite.getFormula() : "";
     int charge = metabolite.getCharge();
     FBCSpeciesPlugin specPlug = (FBCSpeciesPlugin) species.getPlugin(FBCConstants.shortLabel);
     boolean validFormula = false;
@@ -337,17 +342,17 @@ public class JSONParser {
       }
     }
     specPlug.setCharge(charge);
-    String compartment = metabolite.getCompartment();
-    if (compartment.isEmpty() && biggId.isSetCompartmentCode()) {
-      compartment = biggId.getCompartmentCode();
+    String compartmentCode = metabolite.getCompartment();
+    if (compartmentCode.isEmpty() && biggId.isSetCompartmentCode()) {
+      compartmentCode = biggId.getCompartmentCode();
     }
-    species.setCompartment(compartment);
+    species.setCompartment(compartmentCode);
     // constraint sense is specified in former parser, not specified in scheme, thus ignored for now
     parseAnnotation(species, metabolite.getAnnotation());
     parseNotes(species, metabolite.getNotes());
     if (!validFormula) {
       try {
-        species.appendNotes("<p>FORMULA: " + formula + "</p>\n");
+        species.appendNotes(SBMLtools.toNotesString("<p>FORMULA: " + formula + "</p>"));
       } catch (XMLStreamException e) {
         e.printStackTrace();
       }
@@ -500,7 +505,7 @@ public class JSONParser {
    * @param r
    */
   private void createSubsystem(Model model, Reaction reaction, org.sbml.jsbml.Reaction r) {
-    String subsystem = Optional.ofNullable(reaction.getSubsystem()).orElse("");
+    String subsystem = reaction.getSubsystem() != null ? reaction.getSubsystem() : "";
     if (!subsystem.isEmpty()) {
       GroupsModelPlugin groupsModelPlugin = (GroupsModelPlugin) model.getPlugin(GroupsConstants.shortLabel);
       Group group = (Group) groupsModelPlugin.getGroup(subsystem);

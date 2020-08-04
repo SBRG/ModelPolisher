@@ -1,17 +1,18 @@
 package edu.ucsd.sbrg.bigg.polishing;
 
-import de.zbit.util.ResourceManager;
-import edu.ucsd.sbrg.bigg.BiGGId;
-import org.sbml.jsbml.Compartment;
-import org.sbml.jsbml.Model;
-import org.sbml.jsbml.SBase;
-import org.sbml.jsbml.Species;
+import static java.text.MessageFormat.format;
 
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
-import static java.text.MessageFormat.format;
+import org.sbml.jsbml.Compartment;
+import org.sbml.jsbml.Model;
+import org.sbml.jsbml.SBase;
+import org.sbml.jsbml.Species;
+
+import de.zbit.util.ResourceManager;
+import edu.ucsd.sbrg.bigg.BiGGId;
 
 public class SpeciesPolishing {
 
@@ -34,7 +35,7 @@ public class SpeciesPolishing {
 
 
   /**
-   * @return
+   * @return {@link Optional} containing a {@link Species} that should be removed from the model due to missing id
    */
   public Optional<Species> polish() {
     String id = species.getId();

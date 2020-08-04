@@ -1,6 +1,6 @@
 package edu.ucsd.sbrg.bigg;
 
-import de.zbit.util.ResourceManager;
+import static java.text.MessageFormat.format;
 
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.text.MessageFormat.format;
+import de.zbit.util.ResourceManager;
 
 /**
  * This class stores the information from BiGG identifiers and provides methods
@@ -579,22 +579,22 @@ public class BiGGId {
    */
   public String toBiGGId(String prefix, String abbreviation, String compartmentCode, String tissueCode) {
     StringBuilder sb = new StringBuilder();
-    if (!Optional.ofNullable(prefix).orElse("").isEmpty()) {
+    if (prefix != null && !prefix.equals("")) {
       sb.append(prefix);
     }
-    if (!Optional.ofNullable(abbreviation).orElse("").isEmpty()) {
+    if (abbreviation != null && !abbreviation.equals("")) {
       if (sb.length() > 0) {
         sb.append('_');
       }
       sb.append(abbreviation);
     }
-    if (!Optional.ofNullable(compartmentCode).orElse("").isEmpty()) {
+    if (compartmentCode != null && !compartmentCode.equals("")) {
       if (sb.length() > 0) {
         sb.append('_');
       }
       sb.append(compartmentCode);
     }
-    if (!Optional.ofNullable(tissueCode).orElse("").isEmpty()) {
+    if (tissueCode != null && !tissueCode.equals("")) {
       if (sb.length() > 0) {
         sb.append('_');
       }

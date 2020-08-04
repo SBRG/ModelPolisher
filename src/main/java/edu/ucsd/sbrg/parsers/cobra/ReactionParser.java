@@ -1,10 +1,15 @@
 package edu.ucsd.sbrg.parsers.cobra;
 
-import de.zbit.sbml.util.SBMLtools;
-import de.zbit.util.ResourceManager;
-import de.zbit.util.Utils;
-import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.Registry;
+import static java.text.MessageFormat.format;
+import static org.sbml.jsbml.util.Pair.pairOf;
+
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.StringTokenizer;
+import java.util.logging.Logger;
+
+import javax.xml.stream.XMLStreamException;
+
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.Reaction;
@@ -14,18 +19,15 @@ import org.sbml.jsbml.Unit;
 import org.sbml.jsbml.ext.fbc.FBCConstants;
 import org.sbml.jsbml.ext.fbc.FBCReactionPlugin;
 import org.sbml.jsbml.util.ModelBuilder;
+
+import de.zbit.sbml.util.SBMLtools;
+import de.zbit.util.ResourceManager;
+import de.zbit.util.Utils;
+import edu.ucsd.sbrg.bigg.BiGGId;
+import edu.ucsd.sbrg.miriam.Registry;
 import us.hebi.matlab.mat.types.Array;
 import us.hebi.matlab.mat.types.Cell;
 import us.hebi.matlab.mat.types.Matrix;
-
-import javax.xml.stream.XMLStreamException;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.StringTokenizer;
-import java.util.logging.Logger;
-
-import static java.text.MessageFormat.format;
-import static org.sbml.jsbml.util.Pair.pairOf;
 
 public class ReactionParser {
 
@@ -174,7 +176,7 @@ public class ReactionParser {
           }
           double score = ((Matrix) cell).getDouble(0);
           logger.fine(format(MESSAGES.getString("DISPLAY_CONF_SCORE"), score, reaction.getId()));
-          builder.buildParameter("P_confidenceScore_of_" + SBMLtools.toSId(rId), // id
+          builder.buildParameter("P_confidenceScore_of_" + org.sbml.jsbml.util.SBMLtools.toSId(rId), // id
             format("Confidence score of reaction {0}", reaction.isSetName() ? reaction.getName() : reaction.getId()), // name
             score, // value
             true, // constant

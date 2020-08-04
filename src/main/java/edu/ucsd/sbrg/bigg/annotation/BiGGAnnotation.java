@@ -1,27 +1,7 @@
 package edu.ucsd.sbrg.bigg.annotation;
 
-import de.zbit.util.ResourceManager;
-import de.zbit.util.progressbar.AbstractProgressBar;
-import de.zbit.util.progressbar.ProgressBar;
-import edu.ucsd.sbrg.bigg.Parameters;
-import edu.ucsd.sbrg.db.BiGGDB;
-import edu.ucsd.sbrg.db.BiGGDBContract;
-import edu.ucsd.sbrg.db.QueryOnce;
-import edu.ucsd.sbrg.miriam.Registry;
-import org.sbml.jsbml.CVTerm;
-import org.sbml.jsbml.CVTerm.Qualifier;
-import org.sbml.jsbml.Model;
-import org.sbml.jsbml.Reaction;
-import org.sbml.jsbml.SBMLDocument;
-import org.sbml.jsbml.SBase;
-import org.sbml.jsbml.Species;
-import org.sbml.jsbml.ext.fbc.FBCConstants;
-import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
-import org.sbml.jsbml.ext.fbc.GeneProduct;
-import org.sbml.jsbml.util.Pair;
+import static java.text.MessageFormat.format;
 
-import javax.swing.tree.TreeNode;
-import javax.xml.stream.XMLStreamException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,7 +21,29 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import static java.text.MessageFormat.format;
+import javax.swing.tree.TreeNode;
+import javax.xml.stream.XMLStreamException;
+
+import org.sbml.jsbml.CVTerm;
+import org.sbml.jsbml.CVTerm.Qualifier;
+import org.sbml.jsbml.Model;
+import org.sbml.jsbml.Reaction;
+import org.sbml.jsbml.SBMLDocument;
+import org.sbml.jsbml.SBase;
+import org.sbml.jsbml.Species;
+import org.sbml.jsbml.ext.fbc.FBCConstants;
+import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
+import org.sbml.jsbml.ext.fbc.GeneProduct;
+import org.sbml.jsbml.util.Pair;
+
+import de.zbit.util.ResourceManager;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
+import edu.ucsd.sbrg.bigg.Parameters;
+import edu.ucsd.sbrg.db.BiGGDB;
+import edu.ucsd.sbrg.db.BiGGDBContract;
+import edu.ucsd.sbrg.db.QueryOnce;
+import edu.ucsd.sbrg.miriam.Registry;
 
 /**
  * @author Thomas Zajac
@@ -156,7 +158,7 @@ public class BiGGAnnotation {
     Parameters parameters = Parameters.get();
     String modelNotesFile = "ModelNotes.html";
     String documentNotesFile = "SBMLDocumentNotes.html";
-    if ((parameters.noModelNotes() != null) && parameters.noModelNotes()) {
+    if (parameters.noModelNotes()) {
       modelNotesFile = null;
       documentNotesFile = null;
     } else {

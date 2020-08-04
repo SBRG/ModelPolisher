@@ -1,9 +1,6 @@
 package edu.ucsd.sbrg.miriam;
 
-import de.zbit.util.ResourceManager;
-import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.models.Miriam;
-import org.sbml.jsbml.util.Pair;
+import static java.text.MessageFormat.format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +14,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static java.text.MessageFormat.format;
+import org.sbml.jsbml.util.Pair;
+
+import de.zbit.util.ResourceManager;
+import edu.ucsd.sbrg.bigg.BiGGId;
+import edu.ucsd.sbrg.miriam.models.Miriam;
 
 public class Registry {
 
@@ -225,7 +226,7 @@ public class Registry {
     String provider = "";
     String identifier = "";
     if (urlMatcher.matches()) {
-      provider = Optional.ofNullable(urlMatcher.group("provider")).orElse("");
+      provider = urlMatcher.group("provider") != null ? urlMatcher.group("provider") : "";
       identifier = urlMatcher.group("id");
     } else {
       Pair<String, String> parts = extractPartsFromNonCanonical(resource);
@@ -344,7 +345,7 @@ public class Registry {
     } else if (resource.contains("refseq") && resource.contains("WP_")) {
       resource = replace(resource, "refseq", "ncbiprotein");
       logger.info(
-        format("Ids starting with 'WP_' seem to belong to 'ncbiprotein', not 'refseq'. Changed accordingly for '{0}'",
+        format("Ids starting with 'WP_' seem to belong to 'ncbiprotein', not 'refseq'. Changed accordingly for {0}",
           resource));
     } else if (resource.contains("rhea") && resource.contains("#")) {
       // remove last part, it's invalid either way, even though it gets resolved due to misinterpretation as non

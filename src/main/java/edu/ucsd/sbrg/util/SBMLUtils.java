@@ -88,7 +88,7 @@ public class SBMLUtils {
   /**
    * 
    */
-  public static void cleanGPRMap() {
+  public static void clearGPRMap() {
     geneProductReferences = new HashMap<>();
   }
 

@@ -72,10 +72,6 @@ import edu.ucsd.sbrg.util.UpdateListener;
 public class ModelPolisher extends Launcher {
 
   /**
-   *
-   */
-  private Parameters parameters;
-  /**
    * Type of current input file
    */
   private FileType fileType;
@@ -107,7 +103,10 @@ public class ModelPolisher extends Launcher {
   }
 
   /**
+   * Entry point
+   *
    * @param args
+   *        Commandline arguments passed, use help flag to obtain usage information
    */
   public static void main(String[] args) {
     new ModelPolisher(args);
@@ -115,31 +114,30 @@ public class ModelPolisher extends Launcher {
 
 
   /**
+   * Initializes super class with Commandline arguments, which are converted into {@link AppConf} and passsed to
+   * {@link ModelPolisher#commandLineMode(AppConf)}, which runs the rest of the program
+   *
    * @param args
+   *        Commandline arguments
    */
   public ModelPolisher(String... args) {
     super(args);
   }
 
 
-  /*
-   * (non-Javadoc)
+  /**
+   * Starts ModelPolisher with given commandline arguments and initializes {@link Parameters} and database connections
+   *
+   * @param appConf
+   *        from super class initialization, holds commandline arguments
    * @see de.zbit.Launcher#commandLineMode(de.zbit.AppConf)
    */
   @Override
   public void commandLineMode(AppConf appConf) {
     SBProperties args = appConf.getCmdArgs();
+    initParameters(args);
     try {
-      parameters = Parameters.init(args);
-    } catch (IllegalArgumentException exc) {
-      logger.severe(exc.getLocalizedMessage());
-      exit();
-    }
-    DBConfig.initBiGG(args, parameters.annotateWithBiGG());
-    DBConfig.initADB(args, parameters.addADBAnnotations());
-    // Gives users the choice to pass an alternative model notes XHTML file to the program.
-    try {
-      batchProcess(parameters.input(), parameters.output());
+      batchProcess(Parameters.get().input(), Parameters.get().output());
     } catch (XMLStreamException | IOException exc) {
       exc.printStackTrace();
     }
@@ -156,14 +154,34 @@ public class ModelPolisher extends Launcher {
 
 
   /**
+   * Initializes parameters and database connections
+   *
+   * @param args
+   *        Commandline arguments
+   */
+  private void initParameters(SBProperties args) {
+    try {
+      Parameters.init(args);
+    } catch (IllegalArgumentException exc) {
+      throw new IllegalArgumentException(exc.getLocalizedMessage());
+    }
+    DBConfig.initBiGG(args, Parameters.get().annotateWithBiGG());
+    DBConfig.initADB(args, Parameters.get().addADBAnnotations());
+  }
+
+
+  /**
+   * Processes given input and output parameters and recurses, if input denotes a directory.
+   * Creates output directory, if not present
+   *
    * @param input:
-   *        Path to input file/directory to process
+   *        Path to input file/directory to process, corresponds to {@link Parameters#input()} at top level
    * @param output:
-   *        Path to output file/directory
+   *        Path to output file/directory, corresponds to {@link Parameters#output()}
    * @throws IOException
-   *         if input file is not found, or no file is present in input directory
+   *         if input file is not found, or no file is present in the input directory
    * @throws XMLStreamException
-   *         propagated from {@link #processFile(File, File)}
+   *         propagated from {@link ModelPolisher#processFile(File, File)}
    */
   private void batchProcess(File input, File output) throws IOException, XMLStreamException {
     if (!input.exists()) {
@@ -171,57 +189,40 @@ public class ModelPolisher extends Launcher {
     }
     // Create output directory if output is a directory or create output file's directory if output is a file
     checkCreateOutDir(output);
-    if (!input.isFile()) {
+    // Move down into the directory
+    if (input.isDirectory()) {
       if (!output.isDirectory()) {
         // input == dir && output != dir -> should only happen if already inside a directory and trying to recurse,
         // which is not supported
-        logger.warning(
+        // Couldn't this be done in IOOptions using dependencies?
+        logger.info(
           format(MESSAGES.getString("WRITE_DIR_TO_FILE_ERROR"), input.getAbsolutePath(), output.getAbsolutePath()));
         return;
       }
       File[] files = input.listFiles();
       if (files == null || files.length < 1) {
-        throw new IOException(MESSAGES.getString("NO_FILES_ERROR"));
+        throw new IllegalArgumentException(MESSAGES.getString("NO_FILES_ERROR"));
       }
       for (File file : files) {
         File target = getOutputFileName(file, output);
         batchProcess(file, target);
       }
     } else {
-      // NOTE: input is a single file, but output can be a file or a directory, i.e. for multimodel files (MAT format)
+      // NOTE: input is a single file, but output can be a file or a directory
       processFile(input, output);
     }
   }
 
 
   /**
-   * @param file:
-   *        File to get name for in input directory
-   * @param output:
-   *        Path to output directory
-   * @return File in output directory with correct file ending for SBML
-   */
-  private File getOutputFileName(File file, File output) {
-    fileType = getFileType(file);
-    if (!fileType.equals(FileType.SBML_FILE)) {
-      return new File(
-        Utils.ensureSlash(output.getAbsolutePath()) + FileTools.removeFileExtension(file.getName()) + ".xml");
-    } else {
-      return new File(Utils.ensureSlash(output.getAbsolutePath()) + file.getName());
-    }
-  }
-
-
-  /**
+   * Creates output directory or output parent directory, if necessary
+   *
    * @param output:
    *        File denoting output location
    */
   private void checkCreateOutDir(File output) {
     logger.info(format(MESSAGES.getString("OUTPUT_FILE_DESC"), isDirectory(output) ? "directory" : "file"));
-    /*
-     * ModelPolisher.isDirectory() checks if output location contains ., if so it is assumed to be a file,
-     * else it is assumed to be a directory
-     */
+    // ModelPolisher.isDirectory() checks if output location contains ., if so it is assumed to be a file
     // output is directory
     if (isDirectory(output) && !output.exists()) {
       logger.info(format(MESSAGES.getString("CREATING_DIRECTORY"), output.getAbsolutePath()));
@@ -250,13 +251,33 @@ public class ModelPolisher extends Launcher {
 
 
   /**
+   * Fix output file name to contain xml extension
+   *
+   * @param file:
+   *        File to get name for in input directory
+   * @param output:
+   *        Path to output directory
+   * @return File in output directory with correct file ending for SBML
+   */
+  private File getOutputFileName(File file, File output) {
+    fileType = getFileType(file);
+    if (!fileType.equals(FileType.SBML_FILE)) {
+      return new File(
+        Utils.ensureSlash(output.getAbsolutePath()) + FileTools.removeFileExtension(file.getName()) + ".xml");
+    } else {
+      return new File(Utils.ensureSlash(output.getAbsolutePath()) + file.getName());
+    }
+  }
+
+
+  /**
+   * Check if file is directory by calling {@link File#isDirectory()} on an existing file or check presence of '.' in
+   * output.getName(), if this is not the case
+   *
    * @param file
    */
-  public boolean isDirectory(File file) {
-    /*
-     * file = d1/d2/d3 is taken as a file by method file.isDirectory()
-     * Check if file is directory by checking presence or '.' in output.getName()
-     */
+  private boolean isDirectory(File file) {
+    // file = d1/d2/d3 is taken as a file by method file.isDirectory()
     if (file.exists()) {
       return file.isDirectory();
     } else {
@@ -266,6 +287,9 @@ public class ModelPolisher extends Launcher {
 
 
   /**
+   * Preprocessing based on file type, i.e. setting correct output file extension and applying workaround for SBML files
+   * with top level namespace declarations
+   *
    * @param input:
    *        input file
    * @param output:
@@ -280,7 +304,7 @@ public class ModelPolisher extends Launcher {
     fileType = getFileType(input);
     if (fileType.equals(FileType.UNKNOWN)) {
       // do this for now to update SBML files with top level namespace declarations (Possibly from CarveMe)
-      // should skip invokation of most of the code later on as tags are already replaced
+      // should skip invocation of most of the code later on as tags are already replaced
       checkHTMLTags(input);
       fileType = getFileType(input);
       // did not fix the issue, abort
@@ -317,6 +341,8 @@ public class ModelPolisher extends Launcher {
 
 
   /**
+   * Read input file and dispatch polishing tasks for different possible file types
+   *
    * @param input:
    *        Input file in either SBML, MAT or JSON format
    * @param output:
@@ -345,7 +371,7 @@ public class ModelPolisher extends Launcher {
     }
     polish(doc, output);
     // Clear map for next model
-    SBMLUtils.cleanGPRMap();
+    SBMLUtils.clearGPRMap();
     GPRParser.clearAssociationMap();
     time = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - time);
     logger.info(String.format(MESSAGES.getString("FINISHED_TIME"), (time / 60), (time % 60)));
@@ -403,6 +429,8 @@ public class ModelPolisher extends Launcher {
 
 
   /**
+   * Dispatch central tasks like polishing, annotation, combine archive creation, compression and validation
+   *
    * @param doc
    * @param output
    * @throws IOException
@@ -413,6 +441,7 @@ public class ModelPolisher extends Launcher {
       logger.severe(MESSAGES.getString("MODEL_MISSING"));
       return;
     }
+    Parameters parameters = Parameters.get();
     doc = checkLevelAndVersion(doc);
     // Polishing
     SBMLPolisher polisher = new SBMLPolisher();
@@ -426,6 +455,7 @@ public class ModelPolisher extends Launcher {
     logger.info(format(MESSAGES.getString("WRITE_FILE_INFO"), output.getAbsolutePath()));
     TidySBMLWriter.write(doc, output, getClass().getSimpleName(), getVersionNumber(), ' ', (short) 2);
     // produce COMBINE archive and delete output model and glossary
+    // TODO: do compression and combine output work together?
     if (parameters.outputCOMBINE()) {
       // producing & writing glossary
       CombineArchive combineArchive = new CombineArchive(doc, output);
@@ -449,6 +479,7 @@ public class ModelPolisher extends Launcher {
         logger.warning(format(MESSAGES.getString("REMOVE_ZIP_INPUT_FAIL"), output.getAbsolutePath()));
       }
       if (parameters.SBMLValidation()) {
+        // use offline validation
         validate(archive, false);
       }
     }
@@ -492,6 +523,8 @@ public class ModelPolisher extends Launcher {
         InputStream istream;
         if (filename.endsWith(".gz")) {
           istream = ZIPUtils.GUnzipStream(filename);
+        } else if (filename.endsWith(".zip")) {
+          istream = ZIPUtils.ZIPunCompressStream(filename);
         } else {
           istream = new FileInputStream(filename);
         }

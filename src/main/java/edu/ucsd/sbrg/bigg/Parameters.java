@@ -1,12 +1,11 @@
 package edu.ucsd.sbrg.bigg;
 
+import java.io.File;
+import java.util.ResourceBundle;
+
 import de.zbit.util.ResourceManager;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBProperties;
-
-import java.io.File;
-import java.util.ResourceBundle;
-import java.util.logging.Logger;
 
 /**
  * Helper class to store all parameters for running ModelPolisher in batch
@@ -17,10 +16,6 @@ import java.util.logging.Logger;
 public class Parameters {
 
   /**
-   * {@link Logger} for this class
-   */
-  private static final transient Logger logger = Logger.getLogger(Parameters.class.getName());
-  /**
    * Bundle for ModelPolisher logger messages
    */
   private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
@@ -29,29 +24,17 @@ public class Parameters {
    */
   static Parameters parameters;
   /**
-   * @see ModelPolisherOptions#INCLUDE_ANY_URI
+   * @see ModelPolisherOptions#ADD_ADB_ANNOTATIONS
    */
-  private Boolean includeAnyURI = null;
+  private boolean addADBAnnotations = ModelPolisherOptions.ADD_ADB_ANNOTATIONS.getDefaultValue();
   /**
    * @see ModelPolisherOptions#ANNOTATE_WITH_BIGG
    */
-  private Boolean annotateWithBiGG = null;
-  /**
-   * @see ModelPolisherOptions#OUTPUT_COMBINE
-   */
-  private Boolean outputCOMBINE = null;
-  /**
-   * @see ModelPolisherOptions#ADD_ADB_ANNOTATIONS
-   */
-  private Boolean addADBAnnotations = null;
+  private boolean annotateWithBiGG = ModelPolisherOptions.ANNOTATE_WITH_BIGG.getDefaultValue();
   /**
    * @see ModelPolisherOptions#CHECK_MASS_BALANCE
    */
-  private Boolean checkMassBalance = null;
-  /**
-   * @see ModelPolisherOptions#NO_MODEL_NOTES
-   */
-  private Boolean noModelNotes = null;
+  private boolean checkMassBalance = ModelPolisherOptions.CHECK_MASS_BALANCE.getDefaultValue();
   /**
    * @see ModelPolisherOptions#COMPRESSION_TYPE
    */
@@ -63,19 +46,22 @@ public class Parameters {
    */
   private File documentNotesFile = null;
   /**
-   * Can be {@code null} (then a default is used).
-   *
    * @see ModelPolisherOptions#DOCUMENT_TITLE_PATTERN
    */
-  private String documentTitlePattern = null;
+  private String documentTitlePattern = ModelPolisherOptions.DOCUMENT_TITLE_PATTERN.getDefaultValue();
   /**
    * @see ModelPolisherOptions#FLUX_COEFFICIENTS
    */
-  double[] fluxCoefficients = null;
+  // default is a boxed value, i.e. easier to just set it explicitly here to the same default value
+  double[] fluxCoefficients = new double[0];
   /**
    * @see ModelPolisherOptions#FLUX_OBJECTIVES
    */
-  private String[] fluxObjectives = null;
+  private String[] fluxObjectives = ModelPolisherOptions.FLUX_OBJECTIVES.getDefaultValue();
+  /**
+   * @see ModelPolisherOptions#INCLUDE_ANY_URI
+   */
+  private boolean includeAnyURI = ModelPolisherOptions.INCLUDE_ANY_URI.getDefaultValue();
   /**
    * Can be {@code null}
    *
@@ -83,13 +69,21 @@ public class Parameters {
    */
   private File modelNotesFile = null;
   /**
+   * @see ModelPolisherOptions#NO_MODEL_NOTES
+   */
+  private boolean noModelNotes = ModelPolisherOptions.NO_MODEL_NOTES.getDefaultValue();
+  /**
    * @see ModelPolisherOptions#OMIT_GENERIC_TERMS
    */
-  private Boolean omitGenericTerms = null;
+  private boolean omitGenericTerms = ModelPolisherOptions.OMIT_GENERIC_TERMS.getDefaultValue();
+  /**
+   * @see ModelPolisherOptions#OUTPUT_COMBINE
+   */
+  private boolean outputCOMBINE = ModelPolisherOptions.OUTPUT_COMBINE.getDefaultValue();
   /**
    * @see ModelPolisherOptions#SBML_VALIDATION
    */
-  private Boolean sbmlValidation = null;
+  private boolean sbmlValidation = ModelPolisherOptions.SBML_VALIDATION.getDefaultValue();
   /**
    * @see IOOptions#INPUT
    */
@@ -100,7 +94,20 @@ public class Parameters {
   private File output = null;
 
   /**
+   * Default constructor for testing purposes
+   */
+  private Parameters() {
+    super();
+  }
+
+
+  /**
+   * Constructor for non testing code path
    * 
+   * @param args
+   *        SBProperties from {@link Parameters#init(SBProperties)}
+   * @throws IllegalArgumentException
+   *         propagated from {@link Parameters#initParameters(SBProperties)}
    */
   private Parameters(SBProperties args) throws IllegalArgumentException {
     super();
@@ -109,7 +116,15 @@ public class Parameters {
 
 
   /**
-   * 
+   * Initializes parameters from commandline arguments, if they are not yet present, else simply returns the initialized
+   * instance.
+   * Prefer {@link Parameters#get()} to get an initialized instance
+   *
+   * @param args
+   *        {@link SBProperties} file with commandline arguments stored
+   * @return Initialized {@link Parameters}
+   * @throws IllegalArgumentException
+   *         propagated from {@link Parameters(SBProperties)}
    */
   static Parameters init(SBProperties args) throws IllegalArgumentException {
     if (parameters == null) {
@@ -119,6 +134,12 @@ public class Parameters {
   }
 
 
+  /**
+   * Returns initialized {@link Parameters} instance. Throws {@link IllegalStateException} if Parameters have not been
+   * initialized
+   *
+   * @return Initialized {@link Parameters} instance
+   */
   public static Parameters get() {
     if (parameters != null) {
       return parameters;
@@ -130,8 +151,20 @@ public class Parameters {
 
 
   /**
+   * @return Parameter set usable for testing, initialized with defaults, all {@link File}s are {@code null}
+   */
+  public static Parameters initDefaults() {
+    return new Parameters();
+  }
+
+
+  /**
+   * Converts {@link SBProperties} holding commandline arguments into usable {@link Parameters}
+   *
    * @param args:
    *        Arguments from commandline
+   * @throws IllegalArgumentException
+   *         if either input or output file are not provided, as program execution makes no sense if either is missing
    */
   private void initParameters(SBProperties args) throws IllegalArgumentException {
     String inPath = args.getProperty(IOOptions.INPUT);
@@ -193,32 +226,33 @@ public class Parameters {
   }
 
 
-  public Boolean includeAnyURI() {
+
+  public boolean includeAnyURI() {
     return includeAnyURI;
   }
 
 
-  public Boolean annotateWithBiGG() {
+  public boolean annotateWithBiGG() {
     return annotateWithBiGG;
   }
 
 
-  public Boolean outputCOMBINE() {
+  public boolean outputCOMBINE() {
     return outputCOMBINE;
   }
 
 
-  public Boolean addADBAnnotations() {
+  public boolean addADBAnnotations() {
     return addADBAnnotations;
   }
 
 
-  public Boolean checkMassBalance() {
+  public boolean checkMassBalance() {
     return checkMassBalance;
   }
 
 
-  public Boolean noModelNotes() {
+  public boolean noModelNotes() {
     return noModelNotes;
   }
 
@@ -253,12 +287,12 @@ public class Parameters {
   }
 
 
-  public Boolean omitGenericTerms() {
+  public boolean omitGenericTerms() {
     return omitGenericTerms;
   }
 
 
-  public Boolean SBMLValidation() {
+  public boolean SBMLValidation() {
     return sbmlValidation;
   }
 
