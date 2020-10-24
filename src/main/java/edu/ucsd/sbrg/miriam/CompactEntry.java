@@ -11,6 +11,9 @@ public class CompactEntry {
   private final String name;
   private final String pattern;
   private final String prefix;
+  private final String sampleId;
+  private final boolean deprecated;
+  private final boolean namespaceEmbeddedInLui;
   private final List<CompactResource> resources;
 
   private CompactEntry(Namespace namespace) {
@@ -18,6 +21,9 @@ public class CompactEntry {
     name = namespace.getName();
     pattern = namespace.getPattern();
     prefix = namespace.getPrefix();
+    deprecated = namespace.isDeprecated();
+    sampleId = namespace.getSampleId();
+    namespaceEmbeddedInLui = namespace.isNamespaceEmbeddedInLui();
     // Get list of all alternative providers with URLs
     resources =
       namespace.getResources().parallelStream().map(CompactResource::fromResource).collect(Collectors.toList());
@@ -51,5 +57,18 @@ public class CompactEntry {
 
   public List<CompactResource> getResources() {
     return resources;
+  }
+
+  public String getSampleId(){
+    return sampleId;
+  }
+
+  public boolean isDeprecated() {
+    return deprecated;
+  }
+
+
+  public boolean isNamespaceEmbeddedInLui() {
+    return namespaceEmbeddedInLui;
   }
 }

@@ -2,6 +2,7 @@ package edu.ucsd.sbrg.parsers.cobra;
 
 import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
+import edu.ucsd.sbrg.miriam.Entries;
 import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.Model;
@@ -130,7 +131,7 @@ public class SpeciesParser {
       String id = toMIRIAMid((Array) cell.get(i));
       if (!COBRAUtils.isEmptyString(id)) {
         id = COBRAUtils.checkId(id);
-        String prefix = Registry.getPrefixForCollection(collection);
+        String prefix = Entries.getInstance().getPrefixForCollection(collection);
         if (!prefix.isEmpty()) {
           String resource;
           if (id.startsWith("http")) {

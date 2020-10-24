@@ -83,12 +83,12 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.util.Pair;
 
 import de.zbit.util.ResourceManager;
 import de.zbit.util.Utils;
 import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.Registry;
 
 /**
  * @author Andreas Dr&auml;ger

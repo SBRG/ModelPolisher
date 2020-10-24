@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import javax.swing.tree.TreeNode;
 import javax.xml.stream.XMLStreamException;
 
+import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.CVTerm.Qualifier;
 import org.sbml.jsbml.Model;
@@ -43,7 +44,6 @@ import edu.ucsd.sbrg.bigg.Parameters;
 import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.BiGGDBContract;
 import edu.ucsd.sbrg.db.QueryOnce;
-import edu.ucsd.sbrg.miriam.Registry;
 
 /**
  * @author Thomas Zajac
@@ -315,7 +315,7 @@ public class BiGGAnnotation {
    */
   public static Optional<String> getBiGGIdFromResources(List<String> resources, String type) {
     for (String resource : resources) {
-      Optional<String> id = Registry.checkResourceUrl(resource).map(Registry::getPartsFromCanonicalURI)
+      Optional<String> id = Registry.checkResourceUrl(resource).map(Registry::getPartsFromIdentifiersURI)
                                     .flatMap(parts -> getBiggIdFromParts(parts, type));
       if (id.isPresent()) {
         return id;

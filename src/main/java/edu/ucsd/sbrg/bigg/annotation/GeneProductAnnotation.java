@@ -136,9 +136,9 @@ public class GeneProductAnnotation extends CVTermAnnotation {
     CVTerm termEncodedBy = new CVTerm(Qualifier.BQB_IS_ENCODED_BY);
     // label is stored without "G_" prefix in BiGG
     BiGGDB.getGeneIds(biggId.getAbbreviation()).forEach(
-      resource -> Registry.checkResourceUrl(resource).map(Registry::getPartsFromCanonicalURI)
-                          .filter(parts -> parts.size() > 0).map(parts -> parts.get(0)).ifPresent(collection -> {
-                            switch (collection) {
+      resource -> Registry.checkResourceUrl(resource).map(Registry::getPartsFromIdentifiersURI)
+                          .filter(parts -> parts.size() > 0).map(parts -> parts.get(0)).ifPresent(prefix -> {
+                            switch (prefix) {
                             case "interpro":
                             case "pdb":
                             case "uniprot":

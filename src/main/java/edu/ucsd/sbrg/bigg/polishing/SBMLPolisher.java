@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
+import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.ListOf;
 import org.sbml.jsbml.Model;
@@ -36,7 +37,6 @@ import org.sbml.jsbml.util.ModelBuilder;
 import de.zbit.util.ResourceManager;
 import de.zbit.util.progressbar.AbstractProgressBar;
 import de.zbit.util.progressbar.ProgressBar;
-import edu.ucsd.sbrg.miriam.Registry;
 
 /**
  * @author Andreas Dr&auml;ger

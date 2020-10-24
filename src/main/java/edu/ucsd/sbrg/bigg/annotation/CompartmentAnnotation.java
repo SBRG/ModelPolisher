@@ -1,5 +1,6 @@
 package edu.ucsd.sbrg.bigg.annotation;
 
+import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.Compartment;
 import org.sbml.jsbml.SBO;
@@ -7,7 +8,6 @@ import org.sbml.jsbml.SBO;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.QueryOnce;
-import edu.ucsd.sbrg.miriam.Registry;
 
 public class CompartmentAnnotation {
   /**

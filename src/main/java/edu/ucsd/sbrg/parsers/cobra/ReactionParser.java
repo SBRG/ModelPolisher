@@ -10,6 +10,8 @@ import java.util.logging.Logger;
 
 import javax.xml.stream.XMLStreamException;
 
+import edu.ucsd.sbrg.miriam.Entries;
+import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.Reaction;
@@ -24,7 +26,6 @@ import de.zbit.sbml.util.SBMLtools;
 import de.zbit.util.ResourceManager;
 import de.zbit.util.Utils;
 import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.Registry;
 import us.hebi.matlab.mat.types.Array;
 import us.hebi.matlab.mat.types.Cell;
 import us.hebi.matlab.mat.types.Matrix;
@@ -240,7 +241,6 @@ public class ReactionParser {
     }
   }
 
-
   /**
    * @param keggId
    * @param reaction
@@ -250,7 +250,8 @@ public class ReactionParser {
       return;
     }
     String prefix = "kegg.reaction";
-    String pattern = Registry.getPattern(Registry.getCollectionForPrefix(prefix));
+    Entries entries = Entries.getInstance();
+    String pattern = entries.getPattern(entries.getCollectionForPrefix(prefix));
     CVTerm term = findOrCreateCVTerm(reaction, CVTerm.Qualifier.BQB_IS);
     StringTokenizer st = new StringTokenizer(keggId, DELIM);
     while (st.hasMoreElements()) {
@@ -300,7 +301,8 @@ public class ReactionParser {
       return;
     }
     String catalog = "kegg.orthology";
-    String pattern = Registry.getPattern(Registry.getCollectionForPrefix(catalog));
+    Entries entries = Entries.getInstance();
+    String pattern = entries.getPattern(entries.getCollectionForPrefix(catalog));
     CVTerm term = findOrCreateCVTerm(reaction, CVTerm.Qualifier.BQB_IS);
     StringTokenizer st = new StringTokenizer(keggId, DELIM);
     while (st.hasMoreElements()) {
@@ -407,7 +409,8 @@ public class ReactionParser {
     if (id.isEmpty()) {
       return false;
     }
-    String pattern = Registry.getPattern(Registry.getCollectionForPrefix(prefix));
+    Entries entries = Entries.getInstance();
+    String pattern = entries.getPattern(entries.getCollectionForPrefix(prefix));
     boolean validId = false;
     if (!pattern.equals("")) {
       validId = Registry.checkPattern(id, pattern);

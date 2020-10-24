@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
+import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.Compartment;
 import org.sbml.jsbml.Model;
@@ -44,7 +45,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.zbit.sbml.util.SBMLtools;
 import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
-import edu.ucsd.sbrg.miriam.Registry;
 import edu.ucsd.sbrg.parsers.json.models.Compartments;
 import edu.ucsd.sbrg.parsers.json.models.Gene;
 import edu.ucsd.sbrg.parsers.json.models.Metabolite;
