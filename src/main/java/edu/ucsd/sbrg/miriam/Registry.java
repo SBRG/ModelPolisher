@@ -19,7 +19,6 @@ import org.sbml.jsbml.CVTerm;
 import de.zbit.util.ResourceManager;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.miriam.models.Miriam;
-import us.hebi.matlab.mat.types.Char;
 
 public class Registry {
 
@@ -99,7 +98,12 @@ public class Registry {
   private static String fixReactomeId(String resource) {
     String identifier = "";
     if (resource.contains("R-ALL-REACT_")) {
-      identifier = identifier.split("R-ALL-REACT_")[1];
+      String[] splits = identifier.split("R-ALL-REACT_");
+      if(splits.length !=2){
+        // missing id, is handled down the line, just return original resource here
+        return resource;
+      }
+      identifier = splits[1];
       if (Character.isDigit(identifier.charAt(0))) {
         identifier = "R-ALL-" + identifier;
       }

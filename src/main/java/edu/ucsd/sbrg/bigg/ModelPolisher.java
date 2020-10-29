@@ -407,8 +407,8 @@ public class ModelPolisher extends Launcher {
       }
       // this is here now for top level namespace declarations until proper handling for such models is clear. See issue
       // #100
-      doc = doc.replaceAll("sbml:", "");
-      doc = doc.replaceAll("xmlns:sbml", "xmlns");
+      // doc = doc.replaceAll("sbml:", "");
+      // doc = doc.replaceAll("xmlns:sbml", "xmlns");
       doc = doc.replaceAll("html:html", "html:body");
       // replace wrong tags
       doc = doc.replaceAll("<html xmlns", "<body xmlns");
