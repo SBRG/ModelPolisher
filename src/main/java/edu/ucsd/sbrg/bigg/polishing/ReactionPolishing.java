@@ -4,6 +4,7 @@ import de.zbit.kegg.AtomBalanceCheck;
 import de.zbit.kegg.AtomBalanceCheck.AtomCheckResult;
 import edu.ucsd.sbrg.bigg.BiGGId;
 import edu.ucsd.sbrg.bigg.Parameters;
+import edu.ucsd.sbrg.miriam.Registry;
 import edu.ucsd.sbrg.util.GPRParser;
 import org.sbml.jsbml.KineticLaw;
 import org.sbml.jsbml.ListOf;
@@ -77,6 +78,7 @@ public class ReactionPolishing {
    */
   @SuppressWarnings("deprecated")
   public boolean polish() {
+    Registry.processResources(reaction.getAnnotation());
     String id = reaction.getId();
     if (id.isEmpty()) {
       // remove species with missing id, produces invalid SBML

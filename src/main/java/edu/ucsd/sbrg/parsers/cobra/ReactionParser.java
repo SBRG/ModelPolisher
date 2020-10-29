@@ -251,7 +251,7 @@ public class ReactionParser {
     }
     String prefix = "kegg.reaction";
     Entries entries = Entries.getInstance();
-    String pattern = entries.getPattern(entries.getCollectionForPrefix(prefix));
+    String pattern = entries.getPattern(entries.getCollectionForProvider(prefix));
     CVTerm term = findOrCreateCVTerm(reaction, CVTerm.Qualifier.BQB_IS);
     StringTokenizer st = new StringTokenizer(keggId, DELIM);
     while (st.hasMoreElements()) {
@@ -302,7 +302,7 @@ public class ReactionParser {
     }
     String catalog = "kegg.orthology";
     Entries entries = Entries.getInstance();
-    String pattern = entries.getPattern(entries.getCollectionForPrefix(catalog));
+    String pattern = entries.getPattern(entries.getCollectionForProvider(catalog));
     CVTerm term = findOrCreateCVTerm(reaction, CVTerm.Qualifier.BQB_IS);
     StringTokenizer st = new StringTokenizer(keggId, DELIM);
     while (st.hasMoreElements()) {
@@ -410,7 +410,7 @@ public class ReactionParser {
       return false;
     }
     Entries entries = Entries.getInstance();
-    String pattern = entries.getPattern(entries.getCollectionForPrefix(prefix));
+    String pattern = entries.getPattern(entries.getCollectionForProvider(prefix));
     boolean validId = false;
     if (!pattern.equals("")) {
       validId = Registry.checkPattern(id, pattern);

@@ -81,6 +81,7 @@ public class SBMLPolisher {
     if (progress != null) {
       progress.finished();
     }
+    Registry.processResources(doc.getAnnotation());
     return doc;
   }
 

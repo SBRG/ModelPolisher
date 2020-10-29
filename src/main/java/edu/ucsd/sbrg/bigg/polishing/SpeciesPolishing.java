@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
+import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.Compartment;
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.SBase;
@@ -38,6 +39,7 @@ public class SpeciesPolishing {
    * @return {@link Optional} containing a {@link Species} that should be removed from the model due to missing id
    */
   public Optional<Species> polish() {
+    Registry.processResources(species.getAnnotation());
     String id = species.getId();
     if (id.isEmpty()) {
       // remove species with missing id, produces invalid SBML

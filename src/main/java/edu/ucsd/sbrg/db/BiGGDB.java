@@ -83,12 +83,12 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.util.Pair;
 
 import de.zbit.util.ResourceManager;
 import de.zbit.util.Utils;
 import edu.ucsd.sbrg.bigg.BiGGId;
+import edu.ucsd.sbrg.miriam.Registry;
 
 /**
  * @author Andreas Dr&auml;ger
@@ -516,7 +516,14 @@ public class BiGGDB {
       pStatement.setString(1, biggId.getAbbreviation());
       ResultSet resultSet = pStatement.executeQuery();
       while (resultSet.next()) {
-        Registry.checkResourceUrl(resultSet.getString(1)).map(resources::add);
+        String result = resultSet.getString(1);
+        Optional<String> url = Registry.checkResourceUrl(result);
+        if (!result.contains("identifiers.org") && url.isPresent() && url.get().contains("identifiers.org")) {
+          // add original resource
+          resources.add(result);
+        }
+        // add identifiers.org resource
+        url.map(resources::add);
       }
       pStatement.close();
       connection.close();

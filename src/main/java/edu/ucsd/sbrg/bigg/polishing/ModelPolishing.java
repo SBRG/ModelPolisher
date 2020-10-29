@@ -3,6 +3,7 @@ package edu.ucsd.sbrg.bigg.polishing;
 import de.zbit.util.ResourceManager;
 import de.zbit.util.progressbar.AbstractProgressBar;
 import edu.ucsd.sbrg.bigg.Parameters;
+import edu.ucsd.sbrg.miriam.Registry;
 import edu.ucsd.sbrg.util.SBMLFix;
 import org.sbml.jsbml.InitialAssignment;
 import org.sbml.jsbml.Model;
@@ -56,6 +57,7 @@ public class ModelPolishing {
    *
    */
   public void polish() {
+    Registry.processResources(model.getAnnotation());
     if (!model.isSetMetaId() && (model.getCVTermCount() > 0)) {
       model.setMetaId(model.getId());
     }

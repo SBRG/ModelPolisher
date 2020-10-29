@@ -1,5 +1,6 @@
 package edu.ucsd.sbrg.bigg.polishing;
 
+import edu.ucsd.sbrg.miriam.Registry;
 import org.sbml.jsbml.ext.fbc.GeneProduct;
 
 import edu.ucsd.sbrg.bigg.BiGGId;
@@ -16,6 +17,7 @@ public class GeneProductPolishing {
   /**
    */
   public void polish() {
+    Registry.processResources(geneProduct.getAnnotation());
     String label = null;
     if (geneProduct.isSetLabel() && !geneProduct.getLabel().equalsIgnoreCase("None")) {
       label = geneProduct.getLabel();

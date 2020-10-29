@@ -1,17 +1,23 @@
 package edu.ucsd.sbrg.bigg.polishing;
 
-import de.zbit.util.ResourceManager;
-import edu.ucsd.sbrg.bigg.BiGGId;
+import static java.text.MessageFormat.format;
+
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.logging.Logger;
+
+import edu.ucsd.sbrg.miriam.Registry;
+import org.sbml.jsbml.Annotation;
+import org.sbml.jsbml.CVTerm;
 import org.sbml.jsbml.Compartment;
 import org.sbml.jsbml.Model;
 import org.sbml.jsbml.Unit;
 
-import java.util.ResourceBundle;
-import java.util.logging.Logger;
-
-import static java.text.MessageFormat.format;
+import de.zbit.util.ResourceManager;
+import edu.ucsd.sbrg.bigg.BiGGId;
 
 public class CompartmentPolishing {
+
   /**
    * A {@link Logger} for this class.
    */
@@ -31,6 +37,7 @@ public class CompartmentPolishing {
    *
    */
   public void polish() {
+    Registry.processResources(compartment.getAnnotation());
     if (!compartment.isSetId()) {
       compartment.setId("d"); // default
     } else {

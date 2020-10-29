@@ -23,9 +23,9 @@ public class Entries {
    * Bundle for ModelPolisher logger messages
    */
   private static final transient ResourceBundle MESSAGES = ResourceManager.getBundle("edu.ucsd.sbrg.polisher.Messages");
-  private static final Map<String, String> COLLECTION_FOR_PREFIX = new HashMap<>();
+  private static final Map<String, String> COLLECTION_FOR_PROVIDER = new HashMap<>();
   private static final Map<String, String> PATTERN_FOR_COLLECTION = new HashMap<>();
-  private static final Map<String, String> PREFIX_FOR_COLLECTION = new HashMap<>();
+  private static final Map<String, String> PROVIDER_FOR_COLLECTION = new HashMap<>();
   private static Entries instance;
   private final Root root;
 
@@ -46,9 +46,9 @@ public class Entries {
         String collectionName = entry.getName();
         String pattern = entry.getPattern();
         String prefix = entry.getPrefix();
-        COLLECTION_FOR_PREFIX.put(prefix, collectionName);
+        COLLECTION_FOR_PROVIDER.put(prefix, collectionName);
         PATTERN_FOR_COLLECTION.put(collectionName, pattern);
-        PREFIX_FOR_COLLECTION.put(collectionName, prefix);
+        PROVIDER_FOR_COLLECTION.put(collectionName, prefix);
         Namespace child = new Namespace(this, entry);
         children.add(child);
       }
@@ -84,17 +84,31 @@ public class Entries {
   }
 
 
-  public String getCollection(String url) {
+  /**
+   * Retrieves collection name for a given annotation url, if uniquely resolvable
+   *
+   * @param url
+   *        annotation url to get a collection name for
+   * @return collection name, if uniquely resolvable, else {@code null}
+   */
+  public Node getCollection(String url) {
     List<Node> matches = getMatchForUrl(url);
     if (matches.size() != 1) {
       return null;
     }
-    return matches.get(0).getName();
+    return matches.get(0);
   }
 
 
-  public String getCollectionForPrefix(String prefix) {
-    return COLLECTION_FOR_PREFIX.getOrDefault(prefix, "");
+  /**
+   * Retrieve collection name based on provider code
+   *
+   * @param provider
+   *        provider code used as key for lookup
+   * @return collection name, if present, else an empty {@link String}
+   */
+  public String getCollectionForProvider(String provider) {
+    return COLLECTION_FOR_PROVIDER.getOrDefault(provider, "");
   }
 
 
@@ -140,8 +154,15 @@ public class Entries {
   }
 
 
-  public String getPrefixForCollection(String collection) {
-    return PREFIX_FOR_COLLECTION.getOrDefault(collection, "");
+  /**
+   * Retrieve provider code based on collection name
+   *
+   * @param collection
+   *        collection name used as key in lookup
+   * @return provider code, if present, else an empty {@link String}
+   */
+  public String getProviderForCollection(String collection) {
+    return PROVIDER_FOR_COLLECTION.getOrDefault(collection, "");
   }
 
 

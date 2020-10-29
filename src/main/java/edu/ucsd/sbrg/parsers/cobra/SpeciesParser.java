@@ -131,7 +131,7 @@ public class SpeciesParser {
       String id = toMIRIAMid((Array) cell.get(i));
       if (!COBRAUtils.isEmptyString(id)) {
         id = COBRAUtils.checkId(id);
-        String prefix = Entries.getInstance().getPrefixForCollection(collection);
+        String prefix = Entries.getInstance().getProviderForCollection(collection);
         if (!prefix.isEmpty()) {
           String resource;
           if (id.startsWith("http")) {
