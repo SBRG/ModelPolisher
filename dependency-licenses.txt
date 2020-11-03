@@ -1,0 +1,3 @@
+License information for dependencies can be created by running 'gradle generateLicenseReport'
+and is located in build/reports/dependency-license/index.html.
+This functionality is provided by the 'Gradle License Report' plugin (https://github.com/jk1/Gradle-License-Report).

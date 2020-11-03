@@ -1,6 +1,14 @@
 plugins {
     id "java"
     id "application"
+    id "com.github.jk1.dependency-license-report" version "1.16"
+}
+
+licenseReport {
+    filters = [
+            new com.github.jk1.license.filter.LicenseBundleNormalizer(),
+            new com.github.jk1.license.filter.ExcludeTransitiveDependenciesFilter()
+    ]
 }
 
 // Java versions for compilation and output
@@ -50,18 +58,18 @@ repositories {
 }
 
 def jacksonVersion = "2.11.0"
-def jupiterVersion = "5.7.0-M1"
+def jupiterVersion = "5.7.0"
 
 dependencies {
     implementation "org.sbml.jsbml:jsbml:1.5"
     implementation "de.zbit:SysBio:1390"
-    implementation "org.postgresql:postgresql:42.2.12"
-    implementation "org.biojava:biojava-ontology:5.3.0"
+    implementation "org.postgresql:postgresql:42.2.18"
+    implementation "org.biojava:biojava-ontology:5.4.0"
     implementation 'us.hebi.matlab.mat:mfl-core:0.5.6'
     implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation "net.sf.jtidy:jtidy:r938"
-    implementation "de.uni-rostock.sbi:CombineArchive:1.4.0"
+    implementation "de.uni-rostock.sbi:CombineArchive:1.4.1"
     implementation "com.zaxxer:HikariCP:3.4.5"
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
