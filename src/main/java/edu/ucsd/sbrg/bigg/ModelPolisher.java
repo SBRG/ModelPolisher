@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,6 +31,7 @@ import java.util.logging.Logger;
 
 import javax.xml.stream.XMLStreamException;
 
+import edu.ucsd.sbrg.parsers.json.JSONConverter;
 import org.sbml.jsbml.SBMLDocument;
 import org.sbml.jsbml.SBMLError;
 import org.sbml.jsbml.SBMLErrorLog;
@@ -458,6 +460,11 @@ public class ModelPolisher extends Launcher {
       BiGGAnnotation annotation = new BiGGAnnotation();
       doc = annotation.annotate(doc);
     }
+    //    TODO: add flag for JSON output
+    //    String out = output.getAbsolutePath().replaceAll("\\.xml", ".json");
+    //    try(BufferedWriter writer = new BufferedWriter(new FileWriter(out))){
+    //      writer.write(JSONConverter.getJSONDocument(doc));
+    //    }
     // writing polished model
     logger.info(format(MESSAGES.getString("WRITE_FILE_INFO"), output.getAbsolutePath()));
     TidySBMLWriter.write(doc, output, getClass().getSimpleName(), getVersionNumber(), ' ', (short) 2);

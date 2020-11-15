@@ -77,7 +77,7 @@ NOTE: Once database backend is set-up by `docker-compose`, the databases are als
 
 On running these commands, databases will be restored in respective containers. After databases are successfully set up, use the following command (in `ModelPolisher/` directory) to run ModelPolisher:
 ```
-docker-compose run -v <path_directory_having_models>:/models/ polisher java -jar /ModelPolisher-2.1.jar --input=/models/<model_name> --output=/models/output/<output_name> --annotate-with-bigg=true --add-adb-annotations=true --output-combine=true 
+docker-compose run -v <path_directory_containing_models>:/models/ polisher --input=/models/<model_name> --output=/models/output/<output_name> --annotate-with-bigg=true --add-adb-annotations=true --output-combine=true 
 ```
 
 Note: You must pass *absolute path for host directory*. This command will mount volume `<path_directory_having_models>` to `/models/` in container. Thus, outputs will be produced in directory `<path_directory_having_models>/output`.

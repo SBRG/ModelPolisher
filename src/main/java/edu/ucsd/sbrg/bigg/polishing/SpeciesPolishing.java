@@ -50,7 +50,7 @@ public class SpeciesPolishing {
       }
       return Optional.of(species);
     }
-    // TODO: this is likely not correct, something should be done with this species id
+    // this is likely not correct, something should be done with this species id
     if (species.getId().endsWith("_boundary")) {
       logger.warning(format(MESSAGES.getString("SPECIES_ID_INVALID"), id));
       if (!species.isSetBoundaryCondition() || !species.isBoundaryCondition()) {

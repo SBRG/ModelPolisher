@@ -2,8 +2,11 @@ package edu.ucsd.sbrg.parsers.json.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonPropertyOrder({"id", "name", "metabolites", "gene_reaction_rule", "lower_bound", "upper_boound",
+  "objective_coefficient", "subsystem", "notes", "annotation"})
 public class Reaction {
 
   @JsonProperty(required = true)

@@ -91,7 +91,7 @@ public class ReactionPolishing {
       return false;
     }
     BiGGId.createReactionId(id).ifPresent(this::setSBOTermFromPattern);
-    // TODO: this is confusing, as null is used to represent two different outcomes...
+    // this is confusing, as null is used to represent two different outcomes...
     String compartmentId = reaction.isSetCompartment() ? reaction.getCompartment() : null;
     boolean conflict = false;
     if (reaction.isSetListOfReactants()) {

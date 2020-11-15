@@ -177,7 +177,7 @@ public class ModelPolishing {
    */
   private void polish(Parameter p) {
     if (p.isSetId() && !p.isSetName()) {
-      // TODO: what is happening here?
+      // what is happening here?
       p.setName(SBMLPolisher.polishName(p.getId()));
     }
   }

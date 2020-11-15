@@ -1,14 +1,16 @@
 package edu.ucsd.sbrg.parsers.json.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import static java.text.MessageFormat.format;
 
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static java.text.MessageFormat.format;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonPropertyOrder({"id", "name", "compartment", "charge", "formula", "bound", "notes", "annotation"})
 public class Metabolite {
 
   private static final Logger logger = Logger.getLogger(Metabolite.class.getName());
@@ -61,7 +63,7 @@ public class Metabolite {
   public void setCompartment(String compartment) {
     Pattern validCompartmentCode = Pattern.compile("(C_)?[a-z]{1,2}");
     if (validCompartmentCode.matcher(compartment).find()) {
-      if(compartment.startsWith("C_")){
+      if (compartment.startsWith("C_")) {
         compartment = compartment.substring(2);
       }
       this.compartment = compartment;

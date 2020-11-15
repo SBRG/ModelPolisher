@@ -2,8 +2,10 @@ package edu.ucsd.sbrg.parsers.json.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonPropertyOrder({"id", "name", "notes", "annotation"})
 public class Gene {
 
   @JsonProperty(required = true)

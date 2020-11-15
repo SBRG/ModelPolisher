@@ -1,11 +1,14 @@
 package edu.ucsd.sbrg.parsers.json.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonPropertyOrder({"id", "name", "description", "version", "reactions", "metabolites", "genes", "compartments",
+  "notes", "annotation"})
 public class Root {
 
   @JsonProperty(required = true)

@@ -57,7 +57,7 @@ repositories {
     }
 }
 
-def jacksonVersion = "2.11.0"
+def jacksonVersion = "2.11.3"
 def jupiterVersion = "5.7.0"
 
 dependencies {

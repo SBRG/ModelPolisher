@@ -1,5 +1,6 @@
 package edu.ucsd.sbrg.parsers.json.models;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -19,7 +20,7 @@ public class Metabolites {
   }
 
 
-  @JsonGetter
+  @JsonAnyGetter
   public Map<String, Double> get() {
     return metabolites;
   }
