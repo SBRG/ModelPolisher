@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 
 import javax.xml.stream.XMLStreamException;
 
-import edu.ucsd.sbrg.parsers.json.JSONConverter;
 import org.sbml.jsbml.SBMLDocument;
 import org.sbml.jsbml.SBMLError;
 import org.sbml.jsbml.SBMLErrorLog;
@@ -62,6 +61,7 @@ import edu.ucsd.sbrg.db.BiGGDB;
 import edu.ucsd.sbrg.db.BiGGDBOptions;
 import edu.ucsd.sbrg.db.DBConfig;
 import edu.ucsd.sbrg.parsers.cobra.COBRAParser;
+import edu.ucsd.sbrg.parsers.json.JSONConverter;
 import edu.ucsd.sbrg.parsers.json.JSONParser;
 import edu.ucsd.sbrg.util.CombineArchive;
 import edu.ucsd.sbrg.util.GPRParser;
@@ -408,7 +408,8 @@ public class ModelPolisher extends Launcher {
         return;
       }
       // this is here now for top level namespace declarations until proper handling for such models is clear. See issue
-      // #100
+      // #100 -> does not work for models where sbml namespace is intertwined into another, need to find another
+      // solution
       // doc = doc.replaceAll("sbml:", "");
       // doc = doc.replaceAll("xmlns:sbml", "xmlns");
       doc = doc.replaceAll("html:html", "html:body");
@@ -460,11 +461,12 @@ public class ModelPolisher extends Launcher {
       BiGGAnnotation annotation = new BiGGAnnotation();
       doc = annotation.annotate(doc);
     }
-    //    TODO: add flag for JSON output
-    //    String out = output.getAbsolutePath().replaceAll("\\.xml", ".json");
-    //    try(BufferedWriter writer = new BufferedWriter(new FileWriter(out))){
-    //      writer.write(JSONConverter.getJSONDocument(doc));
-    //    }
+    if (parameters.writeJSON()) {
+      String out = output.getAbsolutePath().replaceAll("\\.xml", ".json");
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(out))) {
+        writer.write(JSONConverter.getJSONDocument(doc));
+      }
+    }
     // writing polished model
     logger.info(format(MESSAGES.getString("WRITE_FILE_INFO"), output.getAbsolutePath()));
     TidySBMLWriter.write(doc, output, getClass().getSimpleName(), getVersionNumber(), ' ', (short) 2);

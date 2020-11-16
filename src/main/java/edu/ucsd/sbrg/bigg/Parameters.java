@@ -85,6 +85,10 @@ public class Parameters {
    */
   private boolean sbmlValidation = ModelPolisherOptions.SBML_VALIDATION.getDefaultValue();
   /**
+   * @see ModelPolisherOptions#WRITE_JSON
+   */
+  private boolean writeJSON = ModelPolisherOptions.WRITE_JSON.getDefaultValue();
+  /**
    * @see IOOptions#INPUT
    */
   private File input = null;
@@ -201,6 +205,7 @@ public class Parameters {
     modelNotesFile = parseFileOption(args, ModelPolisherOptions.MODEL_NOTES_FILE);
     omitGenericTerms = args.getBooleanProperty(ModelPolisherOptions.OMIT_GENERIC_TERMS);
     sbmlValidation = args.getBooleanProperty(ModelPolisherOptions.SBML_VALIDATION);
+    writeJSON = args.getBooleanProperty(ModelPolisherOptions.WRITE_JSON);
   }
 
 
@@ -224,7 +229,6 @@ public class Parameters {
     }
     return null;
   }
-
 
 
   public boolean includeAnyURI() {
@@ -294,6 +298,11 @@ public class Parameters {
 
   public boolean SBMLValidation() {
     return sbmlValidation;
+  }
+
+
+  public boolean writeJSON() {
+    return writeJSON;
   }
 
 

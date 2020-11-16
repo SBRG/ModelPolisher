@@ -166,4 +166,9 @@ public interface ModelPolisherOptions extends KeyProvider {
   @SuppressWarnings("unchecked")
   Option<Boolean> SBML_VALIDATION =
     new Option<>("SBML_VALIDATION", Boolean.class, MESSAGES.getString("SBML_VAL_DESC"), Boolean.FALSE);
+  /**
+   * TODO
+   */
+  @SuppressWarnings("unchecked")
+  Option<Boolean> WRITE_JSON = new Option<>("WRITE_JSON", Boolean.class, "TODO", Boolean.FALSE);
 }

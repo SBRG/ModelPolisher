@@ -19,6 +19,7 @@ import org.sbml.jsbml.Parameter;
 import org.sbml.jsbml.Reaction;
 import org.sbml.jsbml.SBMLDocument;
 import org.sbml.jsbml.Species;
+import org.sbml.jsbml.ext.fbc.Association;
 import org.sbml.jsbml.ext.fbc.FBCConstants;
 import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
 import org.sbml.jsbml.ext.fbc.FBCReactionPlugin;
@@ -43,6 +44,7 @@ import edu.ucsd.sbrg.parsers.json.models.Gene;
 import edu.ucsd.sbrg.parsers.json.models.Metabolite;
 import edu.ucsd.sbrg.parsers.json.models.Metabolites;
 import edu.ucsd.sbrg.parsers.json.models.Root;
+import edu.ucsd.sbrg.util.GPRParser;
 
 public class JSONConverter {
 
@@ -208,7 +210,7 @@ public class JSONConverter {
     FBCReactionPlugin reactionPlugin = (FBCReactionPlugin) r.getPlugin(FBCConstants.shortLabel);
     if (reactionPlugin.isSetGeneProductAssociation()) {
       GeneProductAssociation gpa = reactionPlugin.getGeneProductAssociation();
-      reaction.setGeneReactionRule(gpa.toString());
+      reaction.setGeneReactionRule(GPRParser.stringify(gpa.getAssociation()));
     } else {
       reaction.setGeneReactionRule("");
     }

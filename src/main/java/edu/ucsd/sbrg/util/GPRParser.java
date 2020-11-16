@@ -1,8 +1,17 @@
 package edu.ucsd.sbrg.util;
 
-import de.zbit.util.ResourceManager;
-import de.zbit.util.Utils;
-import edu.ucsd.sbrg.bigg.BiGGId;
+import static java.text.MessageFormat.format;
+
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.logging.Logger;
+
 import org.sbml.jsbml.ASTNode;
 import org.sbml.jsbml.Annotation;
 import org.sbml.jsbml.Model;
@@ -20,17 +29,9 @@ import org.sbml.jsbml.ext.fbc.Or;
 import org.sbml.jsbml.text.parser.CobraFormulaParser;
 import org.sbml.jsbml.xml.XMLNode;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import static java.text.MessageFormat.format;
+import de.zbit.util.ResourceManager;
+import de.zbit.util.Utils;
+import edu.ucsd.sbrg.bigg.BiGGId;
 
 public class GPRParser {
 
@@ -202,6 +203,34 @@ public class GPRParser {
       }
     }
     return false;
+  }
+
+
+  /**
+   * @return
+   */
+  public static String stringify(Association association) {
+    if (association instanceof GeneProductRef) {
+      return ((GeneProductRef) association).getGeneProduct();
+    } else if (association instanceof And) {
+      List<Association> children = ((And) association).getListOfAssociations();
+      int numChildren = ((And) association).getAssociationCount();
+      StringBuilder sb = new StringBuilder();
+      sb.append("(").append(stringify(children.get(0))).append(")");
+      for (int i = 1; i < numChildren; i++) {
+        sb.append(" and (").append(stringify(children.get(i))).append(")");
+      }
+      return sb.toString();
+    } else {
+      List<Association> children = ((Or) association).getListOfAssociations();
+      int numChildren = ((Or) association).getAssociationCount();
+      StringBuilder sb = new StringBuilder();
+      sb.append("(").append(stringify(children.get(0))).append(")");
+      for (int i = 1; i < numChildren; i++) {
+        sb.append(" or (").append(stringify(children.get(i))).append(")");
+      }
+      return sb.toString();
+    }
   }
 
 
