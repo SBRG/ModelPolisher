@@ -1,7 +1,5 @@
 package edu.ucsd.sbrg.parsers.json;
 
-import static java.text.MessageFormat.format;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,7 +17,6 @@ import org.sbml.jsbml.Parameter;
 import org.sbml.jsbml.Reaction;
 import org.sbml.jsbml.SBMLDocument;
 import org.sbml.jsbml.Species;
-import org.sbml.jsbml.ext.fbc.Association;
 import org.sbml.jsbml.ext.fbc.FBCConstants;
 import org.sbml.jsbml.ext.fbc.FBCModelPlugin;
 import org.sbml.jsbml.ext.fbc.FBCReactionPlugin;
@@ -32,6 +29,7 @@ import org.sbml.jsbml.ext.groups.Group;
 import org.sbml.jsbml.ext.groups.GroupsConstants;
 import org.sbml.jsbml.ext.groups.GroupsModelPlugin;
 import org.sbml.jsbml.ext.groups.Member;
+import org.sbml.jsbml.xml.XMLNode;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -79,13 +77,8 @@ public class JSONConverter {
       comps.addAll(compartments);
       root.setCompartments(comps);
     }
-    try {
-      String notes = model.getNotesString();
-      if (!notes.isEmpty()) {
-        root.setNotes(notes);
-      }
-    } catch (XMLStreamException e) {
-      logger.severe(format("Could not parse notes for gene: {0}", model.getName()));
+    if (model.isSetNotes()) {
+      root.setNotes(serializeNotes(model.getNotes()));
     }
     root.setAnnotation(serializeAnnotation(model.getAnnotation()));
     return root;
@@ -113,13 +106,8 @@ public class JSONConverter {
     Gene gene = new Gene();
     gene.setId(g.getId());
     gene.setName(g.getName());
-    try {
-      String notes = g.getNotesString();
-      if (!notes.isEmpty()) {
-        gene.setNotes(notes);
-      }
-    } catch (XMLStreamException e) {
-      logger.severe(format("Could not parse notes for gene: {0}", g.getName()));
+    if (g.isSetNotes()) {
+      gene.setNotes(serializeNotes(g.getNotes()));
     }
     gene.setAnnotation(serializeAnnotation(g.getAnnotation()));
     ObjectMapper mapper = new ObjectMapper();
@@ -168,13 +156,8 @@ public class JSONConverter {
     if (specPlug.isSetChemicalFormula()) {
       metabolite.setFormula(specPlug.getChemicalFormula());
     }
-    try {
-      String notes = species.getNotesString();
-      if (!notes.isEmpty()) {
-        metabolite.setNotes(notes);
-      }
-    } catch (XMLStreamException e) {
-      logger.severe(format("Could not parse notes for species: {0}", species.getName()));
+    if (species.isSetNotes()) {
+      metabolite.setNotes(serializeNotes(species.getNotes()));
     }
     metabolite.setAnnotation(serializeAnnotation(species.getAnnotation()));
     return metabolite;
@@ -262,13 +245,8 @@ public class JSONConverter {
         }
       }
     }
-    try {
-      String notes = r.getNotesString();
-      if (!notes.isEmpty()) {
-        reaction.setNotes(notes);
-      }
-    } catch (XMLStreamException e) {
-      logger.severe(format("Could not parse notes for species: {0}", r.getName()));
+    if (r.isSetNotes()) {
+      reaction.setNotes(serializeNotes(r.getNotes()));
     }
     reaction.setAnnotation(serializeAnnotation(r.getAnnotation()));
     return reaction;
@@ -370,9 +348,27 @@ public class JSONConverter {
 
 
   /**
+   * @param notes
    * @return
    */
-  private static String serializeNotes() {
-    return "";
+  private static List<String> serializeNotes(XMLNode notes) {
+    List<String> convertedNotes = new ArrayList<>();
+    int numChildren = notes.getChildCount();
+    for (int i = 0; i < numChildren; i++) {
+      XMLNode child = notes.getChild(i);
+      for (int j = 0; j < child.getChildCount(); j++) {
+        XMLNode leaf = child.getChild(j);
+        try {
+          // remove XML tags and whitespace
+          String text = leaf.toXMLString().replaceAll("<.*?>", "").strip();
+          if (!text.isEmpty()) {
+            convertedNotes.add(text);
+          }
+        } catch (XMLStreamException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+    return convertedNotes;
   }
 }

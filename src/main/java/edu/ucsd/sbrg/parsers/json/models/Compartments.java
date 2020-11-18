@@ -30,7 +30,7 @@ public class Compartments {
       }
       compartments.put(key, value);
     } else {
-      logger.warning(format("Compartment code '{0}' did not match required pattern (C_)?[a-z]'{'1,2'}'", key));
+      logger.warning(format("Compartment code {0} did not match required pattern (C_)?[a-z]'{'1,2'}'", key));
     }
   }
 
